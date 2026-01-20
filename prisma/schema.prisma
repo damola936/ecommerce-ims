@@ -83,3 +83,5 @@ enum ProductStatus {
   ARCHIVED
   OUT_OF_STOCK
 }
+
+// create draft page and model for saved drafts and archived page and model for archive

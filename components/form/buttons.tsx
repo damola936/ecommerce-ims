@@ -12,12 +12,13 @@ interface SubmitButtonProps {
     className?: string;
     text?: string;
     size?: btnSize;
+    variant?: "default" | "outline" | "secondary" | "ghost" | "destructive" | "link";
 }
 
-export function SubmitButton({className = "", text = "submit", size = "lg"}: SubmitButtonProps) {
+export function SubmitButton({className = "", text = "submit", size = "lg", variant = "default"}: SubmitButtonProps) {
     const {pending} = useFormStatus()
     return (
-        <Button type="submit" disabled={pending} className={cn("capitalize cursor-pointer", className)}>
+        <Button type="submit" disabled={pending} variant={variant} className={cn("capitalize cursor-pointer", className)}>
             {pending ? <><ReloadIcon className='mr-2 h-4 w-4 animate-spin'/> Please wait...</> : text}
         </Button>
     )

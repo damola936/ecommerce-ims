@@ -1,6 +1,7 @@
 import {type FullProduct} from "@/utils/types";
 import {Card, CardContent, CardDescription, CardTitle} from "@/components/ui/card";
 import Image from "next/image";
+import Link from "next/link";
 
 function ProductsList({products}: {products: FullProduct[]}) {
     return (
@@ -9,7 +10,8 @@ function ProductsList({products}: {products: FullProduct[]}) {
             const tag = product.categories[0]?.name || "Uncategorized";
 
             return (
-            <Card key={product.id}>
+                <Link key={product.id} href={`/ecommerce/products/${product.id}`}>
+            <Card>
                 {image ? (
                     <Image
                         src={image.url}
@@ -39,6 +41,7 @@ function ProductsList({products}: {products: FullProduct[]}) {
                     </div>
                 </CardContent>
             </Card>
+                </Link>
             )
         })
     );
