@@ -1,12 +1,13 @@
 "use server"
 
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation"
-import { imageSchema, productSchema, validateWithZodSchema } from "@/utils/schemas";
-import { uploadImagesToBucket } from "@/utils/supabase-image-upload";
-import { prisma } from "@/lib/prisma";
+import {createClient} from "@/utils/supabase/server";
+import {redirect} from "next/navigation"
+import {imageSchema, productSchema, validateWithZodSchema} from "@/utils/schemas";
+import {uploadImagesToBucket} from "@/utils/supabase-image-upload";
+import {prisma} from "@/lib/prisma";
 import slugify from "slugify";
-import { nanoid } from "nanoid";
+import {nanoid} from "nanoid";
+import {ProductStatus} from "@/lib/generated/prisma/enums";
 
 const renderError = (error: unknown): { message: string } => {
     console.log(error);
@@ -27,7 +28,7 @@ export async function logIn(prevState: any, formData: FormData) {
     const supabase = await createClient()
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const { error } = await supabase.auth.signInWithPassword({
+    const {error} = await supabase.auth.signInWithPassword({
         email, password
     })
     if (error) {
@@ -51,20 +52,24 @@ export async function createProductAction(prevState: any, formData: FormData) {
             throw new Error("Please select at least one category")
         }
         const stock = parseInt(formData.get("stock") as string)
-        const attributes = { color: color, size: size, weight: weight };
+        const attributes = {color: color, size: size, weight: weight};
         const validatedFields = validateWithZodSchema(productSchema, rawData)
         const validatedImages = imageFiles.map(image => {
-            const validatedImage = validateWithZodSchema(imageSchema, { image: image })
+            const validatedImage = validateWithZodSchema(imageSchema, {image: image})
             return validatedImage.image
         })
-        const productVariant = { sku: generateSKU(brandName, categories[0]), stock: stock, attributes: attributes, weight: weight };
+        const productVariant = {
+            sku: generateSKU(brandName, categories[0]),
+            stock: stock,
+            attributes: attributes,
+            weight: weight
+        };
 
         const fullImagesPaths = await uploadImagesToBucket(validatedImages)
         const imageConstructs = fullImagesPaths.map((image, index) => {
             if (index === 0) {
-                return { url: image, isPrimary: true }
-            }
-            else return { url: image, isPrimary: false }
+                return {url: image, isPrimary: true}
+            } else return {url: image, isPrimary: false}
         })
         const brand = await prisma.brand.create({
             data: {
@@ -75,7 +80,7 @@ export async function createProductAction(prevState: any, formData: FormData) {
         await prisma.product.create({
             data: {
                 ...validatedFields,
-                slug: slugify(productName, { lower: true, strict: true, trim: true }),
+                slug: slugify(productName, {lower: true, strict: true, trim: true}),
                 sku: generateSKU(brandName, categories[0]),
                 images: {
                     create: imageConstructs
@@ -85,28 +90,40 @@ export async function createProductAction(prevState: any, formData: FormData) {
                 },
                 categories: {
                     connectOrCreate: {
-                        where: { slug: slugify(categories[0], { lower: true, strict: true }) },
+                        where: {slug: slugify(categories[0], {lower: true, strict: true})},
                         create: {
                             name: categories[0],
-                            slug: slugify(categories[0], { lower: true, strict: true }),
+                            slug: slugify(categories[0], {lower: true, strict: true}),
                         }
                     }
                 },
                 brand: {
-                    connect: { id: brand.id }
+                    connect: {id: brand.id}
                 },
+                status: "PUBLISHED",
             }
         })
-    }
-    catch (error) {
+    } catch (error) {
         return renderError(error);
     }
     redirect("/ecommerce/products/all")
 }
 
-export const fetchAllProducts = async () => {
+export const fetchAllProducts = async ({search}: { search: string }) => {
     const products = await prisma.product.findMany({
-        include: { brand: true, variants: true, images: true, categories: true },
+        where: {
+            OR: [
+                {
+                    name: {contains: search, mode: "insensitive"}
+                },
+                {
+                    brand: {
+                        name: {contains: search, mode: "insensitive"}
+                    }
+                }
+            ]
+        },
+        include: {brand: true, variants: true, images: true, categories: true},
         orderBy: {
             createdAt: "desc"
         }
@@ -116,8 +133,30 @@ export const fetchAllProducts = async () => {
 
 export const fetchSingleProduct = async (id: string) => {
     const product = await prisma.product.findUnique({
-        where: { id },
-        include: { brand: true, variants: true, images: true, categories: true },
+        where: {id},
+        include: {brand: true, variants: true, images: true, categories: true},
     })
     return product
+}
+
+export const getProductsByStatus = async (status: ProductStatus) => {
+    const products = await prisma.product.findMany({
+        where: {
+            status: status
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    })
+    return products
+}
+
+export const getAllOrders = async () => {
+    const orders = await prisma.order.findMany({
+        include: {user: true, items: {include: {product: {include: {categories: true}}}}},
+        orderBy: {
+            createdAt: "desc"
+        }
+    })
+    return orders
 }

@@ -31,7 +31,7 @@ async function SingleProductPage({ params }: { params: Promise<{ id: string }> }
                 child={{ label: name }}
             />
             <Container className="py-6 max-w-full">
-                <ProductHeader name={name} sku={sku} />
+                <ProductHeader name={name} sku={sku} status={product.status} />
 
                 <InventoryStats totalStock={totalStock} />
 

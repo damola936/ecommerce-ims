@@ -3,10 +3,10 @@
 import {
   BadgeCheck,
   Bell,
-  ChevronsUpDown,
+  ChevronsUpDown, Computer,
   CreditCard,
-  LogOut,
-  Sparkles,
+  LogOut, Moon,
+  Sparkles, Sun,
 } from "lucide-react"
 
 import {
@@ -30,6 +30,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { logOutUser } from "@/lib/auth-helpers-client";
+import {useTheme} from "next-themes";
 
 export function NavUser({
   user,
@@ -41,6 +42,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { setTheme } = useTheme()
 
   return (
     <SidebarMenu>
@@ -82,24 +84,17 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                <Sun className="text-muted-foreground" />
+                Light Mode
               </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                <Moon className="text-muted-foreground" />
+                Dark Mode
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                <Computer className="text-muted-foreground" />
+                System
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

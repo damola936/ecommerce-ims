@@ -9,8 +9,8 @@ interface InventoryStatsProps {
 export function InventoryStats({ totalStock }: InventoryStatsProps) {
   const getStockStatus = (stock: number) => {
     if (stock <= 0) return { label: "Out of Stock", variant: "destructive" as const, icon: AlertCircle };
-    if (stock < 10) return { label: "Low Stock", variant: "destructive" as const, icon: AlertCircle };
-    if (stock < 50) return { label: "Medium Stock", variant: "secondary" as const, icon: TrendingUp };
+    if (stock < 50) return { label: "Low Stock", variant: "destructive" as const, icon: AlertCircle };
+    if (stock < 100) return { label: "Medium Stock", variant: "secondary" as const, icon: TrendingUp };
     return { label: "High Stock", variant: "default" as const, icon: CheckCircle2 };
   };
 

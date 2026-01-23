@@ -12,7 +12,6 @@ import {
 } from "lucide-react"
 
 import { NavMain } from "@/components/sidebar/nav-main"
-import { NavOthers } from "@/components/sidebar/nav-others"
 import { NavUser } from "@/components/sidebar/nav-user"
 import {
   Sidebar,
@@ -105,13 +104,6 @@ const data = {
       ],
     },
   ],
-  others: [
-    {
-      name: "Settings",
-      url: "/ecommerce/settings",
-      icon: Settings2,
-    },
-  ],
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -133,7 +125,6 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavOthers projects={data.others} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
