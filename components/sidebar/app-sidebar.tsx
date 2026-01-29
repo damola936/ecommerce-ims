@@ -9,6 +9,7 @@ import {
   LucideLock,
   Settings2,
   SquareTerminal,
+    LucideWrench,
 } from "lucide-react"
 
 import { NavMain } from "@/components/sidebar/nav-main"
@@ -102,6 +103,17 @@ const data = {
           url: "/ecommerce/customers/recent",
         },
       ],
+    },
+    {
+      title: "Test",
+      url: "/ecommerce/test/",
+      icon: LucideWrench,
+      items: [
+        {
+          title: "Create",
+          url: "/ecommerce/test/create"
+        }
+      ]
     },
   ],
 }

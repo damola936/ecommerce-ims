@@ -7,7 +7,7 @@ import {uploadImagesToBucket} from "@/utils/supabase-image-upload";
 import {prisma} from "@/lib/prisma";
 import slugify from "slugify";
 import {nanoid} from "nanoid";
-import {ProductStatus} from "@/lib/generated/prisma/enums";
+import {OrderStatus, ProductStatus} from "@/lib/generated/prisma/enums";
 
 const renderError = (error: unknown): { message: string } => {
     console.log(error);
@@ -159,4 +159,172 @@ export const getAllOrders = async () => {
         }
     })
     return orders
+}
+
+export const getAllUsers = async () => {
+    const users = await prisma.user.findMany()
+    return users
+}
+
+
+export const getUserOrdersLength = async (userId: string) => {
+    const userOrders = await prisma.order.findMany({
+        where: {
+            userId: userId
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    })
+    return userOrders.length
+}
+
+export async function createBrandAction(prevState: any, formData: FormData) {
+    try {
+        const brandName = formData.get("name") as string;
+        const existingBrand = await prisma.brand.findFirst({
+            where: {
+                name: brandName
+            }
+        })
+        if (!existingBrand) {
+            await prisma.brand.create({
+                data: {
+                    name: brandName,
+                }
+            })
+            return {message: "Brand created successfully."}
+        } else {
+            return {message: "Brand already exists."}
+        }
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export async function createUserAction(prevState: any, formData: FormData) {
+    try {
+        const email = (formData.get("email") as string)?.trim();
+        if (!email) {
+            return {message: "Email is required."}
+        }
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                email: email
+            }
+        })
+        if (!existingUser) {
+            await prisma.user.create({
+                data: {
+                    email: email,
+                }
+            })
+            return {message: "User created successfully."}
+        } else {
+            return {message: "User already exists."}
+        }
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export async function createOrderAction(prevState: any, formData: FormData) {
+    try {
+        const status = formData.get("status") as OrderStatus;
+        const userEmail = formData.get("user") as string;
+        const productName = formData.get("product") as string;
+        const quantity = parseInt(formData.get("quantity") as string);
+        // get user and product for our order
+        const user = await prisma.user.findFirst({where: {email: userEmail}})
+        const productToOrder = await prisma.product.findFirst({where: {name: productName}})
+        if (user && productToOrder) {
+            await prisma.order.create({
+                data: {
+                    userId: user.id,
+                    // creating the orderItems
+                    items: {
+                        create: {
+                            productId: productToOrder.id,
+                            quantity: quantity,
+                            priceAtPurchase: productToOrder.basePrice
+                        }
+                    },
+                    totalAmount: Number(productToOrder.basePrice) * quantity,
+                    status: status,
+                }
+            })
+        }
+        return {message: "Order created successfully."}
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export async function createCategoryAction(prevState: any, formData: FormData) {
+    try {
+        const categoryName = formData.get("category") as string;
+        const productName = formData.get("product") as string;
+        const product = await prisma.product.findFirst({where: {name: productName}})
+        const slug = slugify(categoryName, {lower: true, strict: true, trim: true})
+        if (product) {
+            await prisma.category.create({
+                data: {
+                    name: categoryName,
+                    slug: slug,
+                    products: {
+                        connect: {
+                            id: product.id
+                        }
+                    }
+                }
+            })
+        }
+        return {message: "Category created successfully."}
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export const createVariantAction = async (prevState: any, formData: FormData) => {
+    try {
+        const productName = formData.get("product") as string;
+        const color = formData.get("color") as string;
+        const size = formData.get("size") as string;
+        const weight = parseFloat(formData.get("weight") as string);
+        const stock = parseInt(formData.get("stock") as string);
+        const length = parseFloat(formData.get("length") as string);
+        const width = parseFloat(formData.get("width") as string);
+        const height = parseFloat(formData.get("height") as string);
+
+        const product = await prisma.product.findFirst({
+            where: {name: productName},
+            include: {brand: true, categories: true},
+        })
+
+        if (!product) {
+            return {message: "Product not found."}
+        }
+
+        const brandName = product.brand?.name || product.name;
+        const categoryName = product.categories[0]?.name || "GEN";
+        const attributes = {color: color, size: size, weight: weight};
+        const dimensions = {length: length, width: width, height: height};
+        const price = Number(product.basePrice) + 10;
+
+        await prisma.productVariant.create({
+            data: {
+                productId: product.id,
+                sku: generateSKU(brandName, categoryName),
+                price: price,
+                stock: stock,
+                attributes: attributes,
+                weight: weight,
+                dimensions: dimensions
+            }
+        })
+
+        return {message: "Variant created successfully."}
+    } catch (error) {
+        return renderError(error);
+    }
 }

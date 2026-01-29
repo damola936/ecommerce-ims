@@ -14,7 +14,7 @@ import {Label} from "@/components/ui/label";
 function SelectInputCategory({items, label, name}:{items: { category: string }[], label: string, name?: string}) {
     return (
         <>
-            <Label>{name || label}</Label>
+            <Label>{label || name}</Label>
             <Select name={name}>
                 <SelectTrigger className="w-45">
                     <SelectValue placeholder= {`Select from ${name}`} />

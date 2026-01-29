@@ -6,14 +6,15 @@ type InputProps = {
     label?: string;
     defaultValue?: string;
     placeholder?: string;
+    className?: string;
 }
 
 
-function FormInput({name, label, defaultValue, placeholder}: InputProps) {
+function FormInput({name, label, defaultValue, placeholder, className}: InputProps) {
     return (
         <>
             <Label htmlFor={name}>{label || name}</Label>
-            <Input  id={name} name={name} defaultValue={defaultValue || ""} placeholder={placeholder} required />
+            <Input  id={name} name={name} defaultValue={defaultValue || ""} placeholder={placeholder} required className={className} />
         </>
     );
 }
