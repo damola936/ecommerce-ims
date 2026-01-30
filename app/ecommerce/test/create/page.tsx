@@ -11,8 +11,10 @@ import CreateUser from "@/components/test/CreateUser";
 import {fetchAllProducts, getAllUsers} from "@/utils/actions";
 
 async function CreatePage() {
-    const users = await getAllUsers()
-    const products = await fetchAllProducts({search: ""})
+    const [users, {products}] = await Promise.all([
+        getAllUsers(),
+        fetchAllProducts({search: "", pageSize: 100})
+    ])
     return (
         <div>
             <BreadcrumbComponent origin={{label: "Test", link: "#"}}

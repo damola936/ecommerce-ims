@@ -8,7 +8,11 @@ import {FullOrder} from "@/utils/types";
 
 
 async function DashBoardOverviewPage() {
-    const orders = await getAllOrders()
+    const [orders, users, {products}] = await Promise.all([
+        getAllOrders(),
+        getAllUsers(),
+        fetchAllProducts({search: "", pageSize: 100})
+    ])
     const orderData = orders.map((order: FullOrder, index) => {
         return {
             id: index,
@@ -21,7 +25,6 @@ async function DashBoardOverviewPage() {
         }
     })
 
-    const users = await getAllUsers()
     const userDetails = await Promise.all(users.map(async (user, index) => ({
         ...user,
         totalOrders: await getUserOrdersLength(user.id),
@@ -29,7 +32,6 @@ async function DashBoardOverviewPage() {
     }))) // map does not wait for async callbacks. It instead gives an array of promises, Promise.all will resolve them
     // in the future accept more items and categories, pass them as arrays, change the data table schema to accept arrays, and then alter items name to add ... to the end of the first and omit the two, then on the edit modal show the full names, flex the categories tags or grid them
 
-    const products = await fetchAllProducts({search: ""})
     const productTableData = products.map((product, index) => {
         const primaryImage =
             product.images.find((image) => image.isPrimary) || product.images[0]

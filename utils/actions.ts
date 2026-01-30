@@ -65,18 +65,19 @@ export async function createProductAction(prevState: any, formData: FormData) {
             weight: weight
         };
 
-        const fullImagesPaths = await uploadImagesToBucket(validatedImages)
+        const [fullImagesPaths, brand] = await Promise.all([
+            uploadImagesToBucket(validatedImages),
+            prisma.brand.create({
+                data: {
+                    name: brandName,
+                }
+            })
+        ])
         const imageConstructs = fullImagesPaths.map((image, index) => {
             if (index === 0) {
                 return {url: image, isPrimary: true}
             } else return {url: image, isPrimary: false}
         })
-        const brand = await prisma.brand.create({
-            data: {
-                name: brandName,
-            }
-        })
-
         await prisma.product.create({
             data: {
                 ...validatedFields,
@@ -109,26 +110,47 @@ export async function createProductAction(prevState: any, formData: FormData) {
     redirect("/ecommerce/products/all")
 }
 
-export const fetchAllProducts = async ({search}: { search: string }) => {
-    const products = await prisma.product.findMany({
-        where: {
-            OR: [
-                {
-                    name: {contains: search, mode: "insensitive"}
-                },
-                {
-                    brand: {
+export const fetchAllProducts = async ({search, page = 1, pageSize = 7}: { search: string, page?: number, pageSize?: number }) => {
+    const skip = (page - 1) * pageSize;
+
+    const [products, totalCount] = await Promise.all([
+        prisma.product.findMany({
+            where: {
+                OR: [
+                    {
                         name: {contains: search, mode: "insensitive"}
+                    },
+                    {
+                        brand: {
+                            name: {contains: search, mode: "insensitive"}
+                        }
                     }
-                }
-            ]
-        },
-        include: {brand: true, variants: true, images: true, categories: true},
-        orderBy: {
-            createdAt: "desc"
-        }
-    })
-    return products
+                ]
+            },
+            include: {brand: true, variants: true, images: true, categories: true},
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip,
+            take: pageSize
+        }),
+        prisma.product.count({
+            where: {
+                OR: [
+                    {
+                        name: {contains: search, mode: "insensitive"}
+                    },
+                    {
+                        brand: {
+                            name: {contains: search, mode: "insensitive"}
+                        }
+                    }
+                ]
+            }
+        })
+    ]);
+
+    return {products, totalCount};
 }
 
 export const fetchSingleProduct = async (id: string) => {
@@ -235,8 +257,10 @@ export async function createOrderAction(prevState: any, formData: FormData) {
         const productName = formData.get("product") as string;
         const quantity = parseInt(formData.get("quantity") as string);
         // get user and product for our order
-        const user = await prisma.user.findFirst({where: {email: userEmail}})
-        const productToOrder = await prisma.product.findFirst({where: {name: productName}})
+        const [user, productToOrder] = await Promise.all([
+            prisma.user.findFirst({where: {email: userEmail}}),
+            prisma.product.findFirst({where: {name: productName}})
+        ])
         if (user && productToOrder) {
             await prisma.order.create({
                 data: {
