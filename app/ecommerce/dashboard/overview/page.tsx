@@ -13,8 +13,8 @@ async function DashBoardOverviewPage() {
         return {
             id: index,
             email: order.user.email,
-            name: order.items.map(item => item.product.name)[0], //there is only one data, in the category array
-            category: order.items.map(item => item.product.categories[0].name)[0], //there is only one data in the items array
+            name: order.items.map(item => item.product.name)[0], //pick the first, in the category array
+            category: order.items.map(item => item.product.categories[0].name)[0], //pick the first in the items array
             status: order.status,
             price: String(order.totalAmount),
             date: order.createdAt.toLocaleDateString(),
