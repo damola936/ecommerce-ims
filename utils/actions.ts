@@ -7,7 +7,7 @@ import {uploadImagesToBucket} from "@/utils/supabase-image-upload";
 import {prisma} from "@/lib/prisma";
 import slugify from "slugify";
 import {nanoid} from "nanoid";
-import {OrderStatus, ProductStatus} from "@/lib/generated/prisma/enums";
+import {OrderStatus, ProductStatus} from "@/lib/generated/prisma";
 
 const renderError = (error: unknown): { message: string } => {
     console.log(error);
