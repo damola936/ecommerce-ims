@@ -18,15 +18,16 @@ import SelectInputCategory from "@/components/form/SelectInputCategory";
 import { Categories, ColorCategories, SizeCategories } from "@/utils/ModelData";
 import { InputFile } from "@/components/form/InputFile";
 import FormContainer from "@/components/form/FormContainer";
-import { createProductAction } from "@/utils/actions";
+import {createProductAction, fetchAllBrands} from "@/utils/actions";
 import { SubmitButton } from "@/components/form/buttons";
 import { faker } from "@faker-js/faker";
 
-function CreateProductComponent() {
+async function CreateProductComponent() {
     const name = faker.commerce.productName()
     const price = parseInt(faker.commerce.price())
-    const company = faker.company.name()
     const description = faker.lorem.sentence({ min: 30, max: 80 })
+    const brands = await fetchAllBrands()
+    const brandCategories = brands.map(brand => ({category: brand.name}))
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -57,8 +58,8 @@ function CreateProductComponent() {
                         <div className="grid gap-3">
                             <NumberInput defaultValue={price} name={"basePrice"} label={"Price ($)"} />
                         </div>
-                        <div className="grid gap-3">
-                            <FormInput name={"brand"} label={"Brand"} defaultValue={company} />
+                        <div className={"grid gap-3"}>
+                            <SelectInputCategory items={brandCategories} label={"Brand"} name={"brand"} />
                         </div>
                         <div className="grid gap-3">
                             <SelectInputCategory items={Categories} label={"Categories"} name={"categories"} />

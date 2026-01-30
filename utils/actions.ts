@@ -8,6 +8,7 @@ import {prisma} from "@/lib/prisma";
 import slugify from "slugify";
 import {nanoid} from "nanoid";
 import {OrderStatus, ProductStatus} from "@/lib/generated/prisma";
+import {revalidatePath} from "next/cache";
 
 const renderError = (error: unknown): { message: string } => {
     console.log(error);
@@ -215,6 +216,7 @@ export async function createBrandAction(prevState: any, formData: FormData) {
                     name: brandName,
                 }
             })
+            revalidatePath("/ecommerce/test/create")
             return {message: "Brand created successfully."}
         } else {
             return {message: "Brand already exists."}
@@ -241,6 +243,7 @@ export async function createUserAction(prevState: any, formData: FormData) {
                     email: email,
                 }
             })
+            revalidatePath("/ecommerce/test/create")
             return {message: "User created successfully."}
         } else {
             return {message: "User already exists."}
@@ -278,6 +281,7 @@ export async function createOrderAction(prevState: any, formData: FormData) {
                 }
             })
         }
+        revalidatePath("/ecommerce/test/create")
         return {message: "Order created successfully."}
     } catch (error) {
         return renderError(error);
@@ -303,6 +307,7 @@ export async function createCategoryAction(prevState: any, formData: FormData) {
                 }
             })
         }
+        revalidatePath("/ecommerce/test/create")
         return {message: "Category created successfully."}
     } catch (error) {
         return renderError(error);
@@ -346,9 +351,14 @@ export const createVariantAction = async (prevState: any, formData: FormData) =>
                 dimensions: dimensions
             }
         })
-
+        revalidatePath("/ecommerce/test/create")
         return {message: "Variant created successfully."}
     } catch (error) {
         return renderError(error);
     }
+}
+
+export const fetchAllBrands = async () => {
+    const brands = await prisma.brand.findMany()
+    return brands
 }

@@ -11,7 +11,6 @@ import {Card, CardContent} from "@/components/ui/card";
 import {Plus} from "lucide-react";
 import FormContainer from "@/components/form/FormContainer";
 import FormInput from "@/components/form/FormInput";
-import TextAreaInput from "@/components/form/TextAreaInput";
 import {Button} from "@/components/ui/button";
 import {SubmitButton} from "@/components/form/buttons";
 import {createBrandAction} from "@/utils/actions";
