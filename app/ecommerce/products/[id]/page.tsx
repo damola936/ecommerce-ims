@@ -52,7 +52,7 @@ async function SingleProductPage({ params }: { params: Promise<{ id: string }> }
                                 <p className="text-muted-foreground leading-relaxed">{description}</p>
                             </div>
                         )}
-                        <ProductVariants variants={variants} />
+                        <ProductVariants variants={variants} basePrice={Number(basePrice)} />
                     </div>
                 </div>
             </Container>

@@ -362,3 +362,75 @@ export const fetchAllBrands = async () => {
     const brands = await prisma.brand.findMany()
     return brands
 }
+
+type highestCat = {
+    highestCategory: string,
+    hNo: string
+}
+type lowestCat = {
+    lowestCategory: string,
+    lNo: string
+}
+
+export type HiLoOrder = {
+    month: string,
+    highestCategory: string,
+    hNo: string,
+    lowestCategory: string,
+    lNo: string
+}
+
+export const fetchFebHiLoOrderCategory = async () => {
+    try {
+        const highest_category:highestCat[] = await prisma.$queryRaw`
+            SELECT 
+                c."name" as "highestCategory", 
+                COUNT(oi."id")::text as "hNo"
+            FROM "Order" o
+            JOIN "OrderItem" oi ON o."id" = oi."orderId"
+            JOIN "Product" p ON oi."productId" = p."id"
+            JOIN "_CategoryToProduct" ctp ON p."id" = ctp."B"
+            JOIN "Category" c ON ctp."A" = c."id"
+            WHERE EXTRACT(MONTH FROM o."createdAt") = 2
+            GROUP BY c."name"
+            ORDER BY COUNT(oi."id") DESC 
+            LIMIT 1
+        `;
+        const lowest_category:lowestCat[] = await prisma.$queryRaw`
+            SELECT 
+                c."name" as "lowestcategory", 
+                COUNT(oi."id")::text as "lNo"
+            FROM "Order" o
+            JOIN "OrderItem" oi ON o."id" = oi."orderId"
+            JOIN "Product" p ON oi."productId" = p."id"
+            JOIN "_CategoryToProduct" ctp ON p."id" = ctp."B"
+            JOIN "Category" c ON ctp."A" = c."id"
+            WHERE EXTRACT(MONTH FROM o."createdAt") = 2
+            GROUP BY c."name"
+            ORDER BY COUNT(oi."id") ASC 
+            LIMIT 1
+        `;
+        const results:HiLoOrder[] = highest_category.map((highest, index) => {
+            return {...highest, month: "February", ...lowest_category[index]}
+        })
+        return results;
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export const fetch5HiLoStocks = async () => {
+    const productsWithVariant = await prisma.product.findMany({
+        include: {variants: true},
+    })
+    const allStocks = productsWithVariant.map((product) => {
+        return {
+            name: product.name,
+            stock: product.variants.reduce((acc, variant) => acc + variant.stock, 0)
+        }
+    })
+    const orderedStocks = allStocks.sort((a, b) => b.stock - a.stock) // sort in descending order
+    const top5Stocks = orderedStocks.slice(0, 5) // take the top 5 stocks
+    const bottom5Stocks = orderedStocks.slice(-5) // take the bottom 5 stocks
+    return {top5Stocks, bottom5Stocks}
+}

@@ -4,7 +4,7 @@ import { Layers } from "lucide-react";
 import {ProductVariant} from "@/lib/generated/prisma/client";
 
 
-export function ProductVariants({variants}: {variants: ProductVariant[]}) {
+export function ProductVariants({variants, basePrice}: {variants: ProductVariant[], basePrice: number}) {
   return (
     <Card>
       <CardHeader>
@@ -38,7 +38,7 @@ export function ProductVariants({variants}: {variants: ProductVariant[]}) {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right font-medium">
-                    {v.price ? `$${Number(v.price).toFixed(2)}` : "—"}
+                    {v.price ? `$${Number(v.price).toFixed(2)}` : basePrice.toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className={`font-semibold ${v.stock < 10 ? 'text-destructive' : 'text-foreground'}`}>

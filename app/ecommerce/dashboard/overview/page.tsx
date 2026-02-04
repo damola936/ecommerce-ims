@@ -5,6 +5,7 @@ import {ChartAreaInteractive} from "@/components/dashboard/chart-area-interactiv
 import {DataTable} from "@/components/dashboard/data-table";
 import {fetchAllProducts, getAllOrders, getAllUsers, getUserOrdersLength} from "@/utils/actions";
 import {FullOrder} from "@/utils/types";
+import {visitorsChartData} from "@/utils/area-chart-data";
 
 
 async function DashBoardOverviewPage() {
@@ -61,7 +62,7 @@ async function DashBoardOverviewPage() {
                     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
                         <SectionCards/>
                         <div className="px-4 lg:px-6">
-                            <ChartAreaInteractive/>
+                            <ChartAreaInteractive chartData={visitorsChartData} title="Total Visitors"/>
                         </div>
                         <DataTable
                             data={orderData}

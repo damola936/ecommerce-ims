@@ -12,14 +12,14 @@ import {
     type DragEndEvent,
     type UniqueIdentifier,
 } from "@dnd-kit/core"
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
+import {restrictToVerticalAxis} from "@dnd-kit/modifiers"
 import {
     arrayMove,
     SortableContext,
     useSortable,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import {CSS} from "@dnd-kit/utilities"
 import {
     IconChevronDown,
     IconChevronLeft,
@@ -53,20 +53,20 @@ import {
     type SortingState,
     type VisibilityState,
 } from "@tanstack/react-table"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { toast } from "sonner"
-import { z } from "zod"
+import {Area, AreaChart, CartesianGrid, XAxis} from "recharts"
+import {toast} from "sonner"
+import {z} from "zod"
 
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import {useIsMobile} from "@/hooks/use-mobile"
+import {Badge} from "@/components/ui/badge"
+import {Button} from "@/components/ui/button"
 import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart"
-import { Checkbox } from "@/components/ui/checkbox"
+import {Checkbox} from "@/components/ui/checkbox"
 import {
     Drawer,
     DrawerClose,
@@ -85,8 +85,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {Input} from "@/components/ui/input"
+import {Label} from "@/components/ui/label"
 import {
     Select,
     SelectContent,
@@ -94,7 +94,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+import {Separator} from "@/components/ui/separator"
 import {
     Table,
     TableBody,
@@ -132,8 +132,8 @@ export const OrderTableSchema = z.object({
 })
 
 // Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
-    const { attributes, listeners } = useSortable({
+function DragHandle({id}: { id: number }) {
+    const {attributes, listeners} = useSortable({
         id,
     })
 
@@ -145,7 +145,7 @@ function DragHandle({ id }: { id: number }) {
             size="icon"
             className="text-muted-foreground size-7 hover:bg-transparent"
         >
-            <IconGripVertical className="text-muted-foreground size-3" />
+            <IconGripVertical className="text-muted-foreground size-3"/>
             <span className="sr-only">Drag to reorder</span>
         </Button>
     )
@@ -155,11 +155,11 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
     {
         id: "drag",
         header: () => null,
-        cell: ({ row }) => <DragHandle id={row.original.id} />,
+        cell: ({row}) => <DragHandle id={row.original.id}/>,
     },
     {
         id: "select",
-        header: ({ table }) => (
+        header: ({table}) => (
             <div className="flex items-center justify-center">
                 <Checkbox
                     checked={
@@ -171,7 +171,7 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
                 />
             </div>
         ),
-        cell: ({ row }) => (
+        cell: ({row}) => (
             <div className="flex items-center justify-center">
                 <Checkbox
                     checked={row.getIsSelected()}
@@ -186,15 +186,15 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
     {
         accessorKey: "name",
         header: "Product Name",
-        cell: ({ row }) => {
-            return <TableCellViewer item={row.original} />
+        cell: ({row}) => {
+            return <TableCellViewer item={row.original}/>
         },
         enableHiding: false,
     },
     {
         accessorKey: "email",
         header: "Email",
-        cell: ({ row }) => (
+        cell: ({row}) => (
             <h2 className={"font-medium"}>{row.original.email}</h2>
         ),
         enableHiding: false,
@@ -202,7 +202,7 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
     {
         accessorKey: "category",
         header: "Category",
-        cell: ({ row }) => {
+        cell: ({row}) => {
             const category = row.original.category || "Uncategorized"
 
             return (
@@ -218,40 +218,40 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
     {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }) => {
+        cell: ({row}) => {
             const status = row.original.status as string
-            
+
             const statusConfig: Record<string, { label: string, icon: React.ReactNode, className: string }> = {
                 PENDING: {
                     label: "Pending",
-                    icon: <IconClock className="size-3" />,
+                    icon: <IconClock className="size-3"/>,
                     className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20 dark:bg-yellow-500/20 dark:text-yellow-400",
                 },
                 PROCESSING: {
                     label: "Processing",
-                    icon: <IconSettings className="size-3 animate-spin" />,
+                    icon: <IconSettings className="size-3 animate-spin"/>,
                     className: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400",
                 },
                 COMPLETED: {
                     label: "Completed",
-                    icon: <IconCircleCheckFilled className="size-3" />,
+                    icon: <IconCircleCheckFilled className="size-3"/>,
                     className: "bg-green-500/10 text-green-600 border-green-500/20 dark:bg-green-500/20 dark:text-green-400",
                 },
                 CANCELLED: {
                     label: "Cancelled",
-                    icon: <IconCircleXFilled className="size-3" />,
+                    icon: <IconCircleXFilled className="size-3"/>,
                     className: "bg-red-500/10 text-red-600 border-red-500/20 dark:bg-red-500/20 dark:text-red-400",
                 },
                 REFUNDED: {
                     label: "Refunded",
-                    icon: <IconRefresh className="size-3" />,
+                    icon: <IconRefresh className="size-3"/>,
                     className: "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:bg-purple-500/20 dark:text-purple-400",
                 },
             }
 
             const config = statusConfig[status] || {
                 label: status,
-                icon: <IconLoader className="size-3" />,
+                icon: <IconLoader className="size-3"/>,
                 className: "text-muted-foreground",
             }
 
@@ -266,7 +266,7 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
     {
         accessorKey: "price",
         header: "Price($)",
-        cell: ({ row }) => (
+        cell: ({row}) => (
             <h2 className={"font-medium"}>{row.original.price}</h2>
         ),
         enableHiding: false,
@@ -274,7 +274,7 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
     {
         accessorKey: "date",
         header: "Date",
-        cell: ({ row }) => (
+        cell: ({row}) => (
             <h2 className={"font-medium"}>{row.original.date}</h2>
         ),
         enableHiding: false,
@@ -290,7 +290,7 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
                         className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
                         size="icon"
                     >
-                        <IconDotsVertical />
+                        <IconDotsVertical/>
                         <span className="sr-only">Open menu</span>
                     </Button>
                 </DropdownMenuTrigger>
@@ -298,7 +298,7 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
                     <DropdownMenuItem>Edit</DropdownMenuItem>
                     <DropdownMenuItem>Make a copy</DropdownMenuItem>
                     <DropdownMenuItem>Favorite</DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator/>
                     <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -306,8 +306,8 @@ const columns: ColumnDef<z.infer<typeof OrderTableSchema>>[] = [
     },
 ]
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof OrderTableSchema>> }) {
-    const { transform, transition, setNodeRef, isDragging } = useSortable({
+function DraggableRow({row}: { row: Row<z.infer<typeof OrderTableSchema>> }) {
+    const {transform, transition, setNodeRef, isDragging} = useSortable({
         id: row.original.id,
     })
 
@@ -358,7 +358,7 @@ export function DataTable({
     )
 
     const dataIds = React.useMemo<UniqueIdentifier[]>(
-        () => data?.map(({ id }) => id) || [],
+        () => data?.map(({id}) => id) || [],
         [data]
     )
 
@@ -388,7 +388,7 @@ export function DataTable({
     })
 
     function handleDragEnd(event: DragEndEvent) {
-        const { active, over } = event
+        const {active, over} = event
         if (active && over && active.id !== over.id) {
             setData((data) => {
                 const oldIndex = dataIds.indexOf(active.id)
@@ -413,7 +413,7 @@ export function DataTable({
                         size="sm"
                         id="view-selector"
                     >
-                        <SelectValue placeholder="Select a view" />
+                        <SelectValue placeholder="Select a view"/>
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="orders">Orders</SelectItem>
@@ -422,7 +422,8 @@ export function DataTable({
                         <SelectItem value="focus-documents">Focus Documents</SelectItem>
                     </SelectContent>
                 </Select>
-                <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
+                <TabsList
+                    className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
                     <TabsTrigger value="orders">Orders</TabsTrigger>
                     <TabsTrigger value="users">
                         Users <Badge variant="secondary">3</Badge>
@@ -436,10 +437,10 @@ export function DataTable({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
-                                <IconLayoutColumns />
+                                <IconLayoutColumns/>
                                 <span className="hidden lg:inline">Customize Columns</span>
                                 <span className="lg:hidden">Columns</span>
-                                <IconChevronDown />
+                                <IconChevronDown/>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
@@ -467,7 +468,7 @@ export function DataTable({
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <Button variant="outline" size="sm">
-                        <IconPlus />
+                        <IconPlus/>
                         <span className="hidden lg:inline">Add Section</span>
                     </Button>
                 </div>
@@ -510,7 +511,7 @@ export function DataTable({
                                         strategy={verticalListSortingStrategy}
                                     >
                                         {table.getRowModel().rows.map((row) => (
-                                            <DraggableRow key={row.id} row={row} />
+                                            <DraggableRow key={row.id} row={row}/>
                                         ))}
                                     </SortableContext>
                                 ) : (
@@ -569,7 +570,7 @@ export function DataTable({
                                 disabled={!table.getCanPreviousPage()}
                             >
                                 <span className="sr-only">Go to first page</span>
-                                <IconChevronsLeft />
+                                <IconChevronsLeft/>
                             </Button>
                             <Button
                                 variant="outline"
@@ -579,7 +580,7 @@ export function DataTable({
                                 disabled={!table.getCanPreviousPage()}
                             >
                                 <span className="sr-only">Go to previous page</span>
-                                <IconChevronLeft />
+                                <IconChevronLeft/>
                             </Button>
                             <Button
                                 variant="outline"
@@ -589,7 +590,7 @@ export function DataTable({
                                 disabled={!table.getCanNextPage()}
                             >
                                 <span className="sr-only">Go to next page</span>
-                                <IconChevronRight />
+                                <IconChevronRight/>
                             </Button>
                             <Button
                                 variant="outline"
@@ -599,7 +600,7 @@ export function DataTable({
                                 disabled={!table.getCanNextPage()}
                             >
                                 <span className="sr-only">Go to last page</span>
-                                <IconChevronsRight />
+                                <IconChevronsRight/>
                             </Button>
                         </div>
                     </div>
@@ -625,12 +626,12 @@ export function DataTable({
 }
 
 const chartData = [
-    { month: "January", desktop: 186, mobile: 80 },
-    { month: "February", desktop: 305, mobile: 200 },
-    { month: "March", desktop: 237, mobile: 120 },
-    { month: "April", desktop: 73, mobile: 190 },
-    { month: "May", desktop: 209, mobile: 130 },
-    { month: "June", desktop: 214, mobile: 140 },
+    {month: "January", desktop: 186, mobile: 80},
+    {month: "February", desktop: 305, mobile: 200},
+    {month: "March", desktop: 237, mobile: 120},
+    {month: "April", desktop: 73, mobile: 190},
+    {month: "May", desktop: 209, mobile: 130},
+    {month: "June", desktop: 214, mobile: 140},
 ]
 
 const chartConfig = {
@@ -644,7 +645,7 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-function TableCellViewer({ item }: { item: z.infer<typeof OrderTableSchema> }) {
+function TableCellViewer({item}: { item: z.infer<typeof OrderTableSchema> }) {
     const isMobile = useIsMobile()
 
     return (
@@ -673,7 +674,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof OrderTableSchema> }) {
                                         right: 10,
                                     }}
                                 >
-                                    <CartesianGrid vertical={false} />
+                                    <CartesianGrid vertical={false}/>
                                     <XAxis
                                         dataKey="month"
                                         tickLine={false}
@@ -684,7 +685,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof OrderTableSchema> }) {
                                     />
                                     <ChartTooltip
                                         cursor={false}
-                                        content={<ChartTooltipContent indicator="dot" />}
+                                        content={<ChartTooltipContent indicator="dot"/>}
                                     />
                                     <Area
                                         dataKey="mobile"
@@ -704,11 +705,11 @@ function TableCellViewer({ item }: { item: z.infer<typeof OrderTableSchema> }) {
                                     />
                                 </AreaChart>
                             </ChartContainer>
-                            <Separator />
+                            <Separator/>
                             <div className="grid gap-2">
                                 <div className="flex gap-2 leading-none font-medium">
                                     Trending up by 5.2% this month{" "}
-                                    <IconTrendingUp className="size-4" />
+                                    <IconTrendingUp className="size-4"/>
                                 </div>
                                 <div className="text-muted-foreground">
                                     Showing total visitors for the last 6 months. This is just
@@ -716,20 +717,20 @@ function TableCellViewer({ item }: { item: z.infer<typeof OrderTableSchema> }) {
                                     and should wrap around.
                                 </div>
                             </div>
-                            <Separator />
+                            <Separator/>
                         </>
                     )}
                     <form className="flex flex-col gap-4">
                         <div className="flex flex-col gap-3">
                             <Label htmlFor="header">Name</Label>
-                            <Input id="header" defaultValue={item.name} />
+                            <Input id="header" defaultValue={item.name}/>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="flex flex-col gap-3">
                                 <Label htmlFor="type">Category</Label>
                                 <Select defaultValue={item.category}>
                                     <SelectTrigger id="type" className="w-full">
-                                        <SelectValue placeholder="Select a category" />
+                                        <SelectValue placeholder="Select a category"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Categories.map((category, index) => (
@@ -744,7 +745,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof OrderTableSchema> }) {
                                 <Label htmlFor="status">Status</Label>
                                 <Select defaultValue={item.status}>
                                     <SelectTrigger id="status" className="w-full">
-                                        <SelectValue placeholder="Select a status" />
+                                        <SelectValue placeholder="Select a status"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="PENDING">PENDING</SelectItem>
