@@ -2,15 +2,15 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation"
-import { imageSchema, productSchema, validateWithZodSchema } from "@/utils/schemas";
+import { productSchema, validateWithZodSchema } from "@/utils/schemas";
 import { uploadImagesToBucket } from "@/utils/supabase-image-upload";
 import { prisma } from "@/lib/prisma";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 import { OrderStatus, ProductStatus } from "@/lib/generated/prisma";
-import {revalidatePath} from "next/cache";
-import {getTrafficPrediction} from "@/utils/prediction-service";
-import {PredictionResult} from "@/utils/types";
+import { revalidatePath } from "next/cache";
+import { getTrafficPrediction } from "@/utils/prediction-service";
+import { PredictionResult } from "@/utils/types";
 
 const renderError = (error: unknown): { message: string } => {
     console.log(error);
@@ -43,77 +43,96 @@ export async function logIn(prevState: any, formData: FormData) {
 
 export async function createProductAction(prevState: any, formData: FormData) {
     try {
-        const rawData = Object.fromEntries(formData)
-        const imageFiles = (formData.getAll("images") as File[]).filter(file => file.name !== 'undefined' && file.size > 0);
-        const brandName = formData.get("brand") as string;
-        const productName = formData.get("name") as string
-        const color = formData.get("color") as string;
-        const size = formData.get("size") as string;
-        const weight = parseFloat(formData.get("weight") as string);
+        const rawData = Object.fromEntries(formData);
         const categories = formData.getAll("categories") as string[];
-        if (categories.length === 0) {
-            throw new Error("Please select at least one category")
-        }
-        const stock = parseInt(formData.get("stock") as string)
-        const attributes = { color: color, size: size, weight: weight };
-        const validatedFields = validateWithZodSchema(productSchema, rawData)
-        const validatedImages = imageFiles.map(image => {
-            const validatedImage = validateWithZodSchema(imageSchema, { image: image })
-            return validatedImage.image
-        })
-        const productVariant = {
-            sku: generateSKU(brandName, categories[0]),
-            stock: stock,
-            attributes: attributes,
-            weight: weight
-        };
+        const imageFiles = (formData.getAll("images") as File[]).filter(
+            (file) => file.name !== "undefined" && file.size > 0
+        );
 
-        const [fullImagesPaths, brand] = await Promise.all([
-            uploadImagesToBucket(validatedImages),
-            prisma.brand.create({
-                data: {
-                    name: brandName,
-                }
-            })
-        ])
-        const imageConstructs = fullImagesPaths.map((image, index) => {
-            if (index === 0) {
-                return { url: image, isPrimary: true }
-            } else return { url: image, isPrimary: false }
-        })
+        const validatedFields = validateWithZodSchema(productSchema, {
+            ...rawData,
+            categories,
+            images: imageFiles,
+        });
+
+        const {
+            name,
+            brand: brandName,
+            categories: validatedCategories,
+            images: validatedImages,
+            color,
+            size,
+            weight,
+            stock,
+            description,
+            basePrice,
+        } = validatedFields;
+
+        const slug = slugify(name, { lower: true, strict: true, trim: true });
+        const categorySlug = slugify(validatedCategories[0], { lower: true, strict: true });
+
+        const fullImagesPaths = await uploadImagesToBucket(validatedImages);
+        const imageConstructs = fullImagesPaths.map((url, index) => ({
+            url,
+            isPrimary: index === 0,
+        }));
+
+        const connectedBrand = await prisma.brand.findFirst({ where: { name: brandName } });
+
+        if (!connectedBrand) {
+            return { message: "Brand not found." }
+        }
+
         await prisma.product.create({
             data: {
-                ...validatedFields,
-                slug: slugify(productName, { lower: true, strict: true, trim: true }),
-                sku: generateSKU(brandName, categories[0]),
+                name,
+                description,
+                basePrice,
+                slug,
+                sku: generateSKU(brandName, validatedCategories[0]),
+                status: "PUBLISHED",
                 images: {
-                    create: imageConstructs
+                    create: imageConstructs,
                 },
                 variants: {
-                    create: [productVariant]
+                    create: [
+                        {
+                            sku: generateSKU(brandName, validatedCategories[0]),
+                            stock,
+                            weight,
+                            attributes: { color, size, weight },
+                        },
+                    ],
                 },
                 categories: {
                     connectOrCreate: {
-                        where: { slug: slugify(categories[0], { lower: true, strict: true }) },
+                        where: { slug: categorySlug },
                         create: {
-                            name: categories[0],
-                            slug: slugify(categories[0], { lower: true, strict: true }),
-                        }
-                    }
+                            name: validatedCategories[0],
+                            slug: categorySlug,
+                        },
+                    },
                 },
                 brand: {
-                    connect: { id: brand.id }
+                    connectOrCreate: {
+                        where: { id: connectedBrand.id },
+                        create: { name: brandName },
+                    },
                 },
-                status: "PUBLISHED",
-            }
-        })
+            },
+        });
     } catch (error) {
         return renderError(error);
     }
-    redirect("/ecommerce/products/all")
+    revalidatePath("/ecommerce/products/all");
+    redirect("/ecommerce/products/all");
 }
 
-export const fetchAllProducts = async ({ search, page = 1, pageSize = 7 }: { search: string, page?: number, pageSize?: number }) => {
+export const fetchAllProducts = async ({ search, page = 1, pageSize = 7 }: {
+    search: string,
+    page?: number,
+    pageSize?: number
+}) => {
     const skip = (page - 1) * pageSize;
 
     const [products, totalCount] = await Promise.all([
@@ -385,31 +404,29 @@ export type HiLoOrder = {
 export const fetchFebHiLoOrderCategory = async () => {
     try {
         const highest_category: highestCat[] = await prisma.$queryRaw`
-            SELECT 
-                c."name" as "highestCategory", 
-                COUNT(oi."id")::text as "hNo"
+            SELECT c."name"             as "highestCategory",
+                   COUNT(oi."id")::text as "hNo"
             FROM "Order" o
-            JOIN "OrderItem" oi ON o."id" = oi."orderId"
-            JOIN "Product" p ON oi."productId" = p."id"
-            JOIN "_CategoryToProduct" ctp ON p."id" = ctp."B"
-            JOIN "Category" c ON ctp."A" = c."id"
+                     JOIN "OrderItem" oi ON o."id" = oi."orderId"
+                     JOIN "Product" p ON oi."productId" = p."id"
+                     JOIN "_CategoryToProduct" ctp ON p."id" = ctp."B"
+                     JOIN "Category" c ON ctp."A" = c."id"
             WHERE EXTRACT(MONTH FROM o."createdAt") = 2
             GROUP BY c."name"
-            ORDER BY COUNT(oi."id") DESC 
+            ORDER BY COUNT(oi."id") DESC
             LIMIT 1
         `;
         const lowest_category: lowestCat[] = await prisma.$queryRaw`
-            SELECT 
-                c."name" as "lowestCategory", 
-                COUNT(oi."id")::text as "lNo"
+            SELECT c."name"             as "lowestCategory",
+                   COUNT(oi."id")::text as "lNo"
             FROM "Order" o
-            JOIN "OrderItem" oi ON o."id" = oi."orderId"
-            JOIN "Product" p ON oi."productId" = p."id"
-            JOIN "_CategoryToProduct" ctp ON p."id" = ctp."B"
-            JOIN "Category" c ON ctp."A" = c."id"
+                     JOIN "OrderItem" oi ON o."id" = oi."orderId"
+                     JOIN "Product" p ON oi."productId" = p."id"
+                     JOIN "_CategoryToProduct" ctp ON p."id" = ctp."B"
+                     JOIN "Category" c ON ctp."A" = c."id"
             WHERE EXTRACT(MONTH FROM o."createdAt") = 2
             GROUP BY c."name"
-            ORDER BY COUNT(oi."id") ASC 
+            ORDER BY COUNT(oi."id") ASC
             LIMIT 1
         `;
         const results: HiLoOrder[] = highest_category.map((highest, index) => {
@@ -437,9 +454,11 @@ export const fetch5HiLoStocks = async () => {
     return { top5Stocks, bottom5Stocks }
 }
 
-export async function predictTrafficAction(date: string, category: string): Promise<PredictionResult | {message: string}> {
+export async function predictTrafficAction(date: string, category: string): Promise<PredictionResult | {
+    message: string
+}> {
     try {
-        const prediction:PredictionResult = await getTrafficPrediction(date, category);
+        const prediction: PredictionResult = await getTrafficPrediction(date, category);
         return prediction;
     } catch (error) {
         return renderError(error);
