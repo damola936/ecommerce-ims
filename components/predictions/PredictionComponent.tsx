@@ -103,7 +103,7 @@ function PredictionComponent({
 
     return (
         <div className="flex flex-col min-h-screen bg-neutral-50 dark:bg-neutral-950">
-            <main className="flex-1 p-4 md:p-8 space-y-8 md:max-w-5xl max-w-full mx-auto w-full"> //fix
+            <main className="flex-1 p-4 md:p-8 space-y-8 md:max-w-5xl max-w-full mx-auto w-full">
                 <div className="flex flex-col space-y-3">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
