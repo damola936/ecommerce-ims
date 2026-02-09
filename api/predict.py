@@ -50,8 +50,9 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # Paths to artifacts
-        # On Vercel, the current working directory is the project root
-        artifacts_dir = os.path.join(os.getcwd(), "utils", "model_artifacts")
+        # Use an absolute path relative to this file to avoid issues with CWD on Vercel
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        artifacts_dir = os.path.join(os.path.dirname(current_dir), "utils", "model_artifacts")
 
         if target_category == "visitors":
             mobile_model_path = "mobile_model.joblib"
