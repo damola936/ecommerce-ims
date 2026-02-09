@@ -59,12 +59,14 @@ export default function PredictionsPage() {
         <div className={"bg-neutral-50 dark:bg-neutral-950"}>
             <BreadcrumbComponent origin={{ label: "Analytics", link: "/ecommerce/analytics" }} child={{ label: "Predictions" }} />
 
-            <Tabs defaultValue="high low forecasting">
-                <TabsList className={"mx-auto"}>
-                    <TabsTrigger value="high low forecasting">High-Low Forecasting</TabsTrigger>
-                    <TabsTrigger value="order no predictions">Order Number Predictions</TabsTrigger>
-                    <TabsTrigger value="visitor no predictions">Visitor Number Predictions</TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="high low forecasting" className="w-full">
+                <div className="flex px-4 overflow-x-auto no-scrollbar justify-start md:justify-center">
+                    <TabsList className="flex-nowrap h-auto p-1">
+                        <TabsTrigger value="high low forecasting" className="px-4 py-2 shrink-0">High-Low Forecasting</TabsTrigger>
+                        <TabsTrigger value="order no predictions" className="px-4 py-2 shrink-0">Order Number Predictions</TabsTrigger>
+                        <TabsTrigger value="visitor no predictions" className="px-4 py-2 shrink-0">Visitor Number Predictions</TabsTrigger>
+                    </TabsList>
+                </div>
                 <TabsContent value="high low forecasting">
                     <HighLowForecasting />
                 </TabsContent>
