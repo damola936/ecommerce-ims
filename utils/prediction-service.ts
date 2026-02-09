@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import path from "path";
-import {PredictionResult} from "@/utils/types";
+import { PredictionResult } from "@/utils/types";
 import { headers } from "next/headers";
 
 /**
@@ -12,7 +12,7 @@ export async function getTrafficPrediction(dateString: string, category: string)
     // If running on Vercel, use the Python API endpoint
     if (process.env.VERCEL) {
         let host = process.env.VERCEL_URL;
-        
+
         try {
             const headerList = await headers();
             const hostHeader = headerList.get("host");
@@ -29,13 +29,24 @@ export async function getTrafficPrediction(dateString: string, category: string)
 
         const protocol = host.includes("localhost") ? "http" : "https";
         const url = `${protocol}://${host}/api/predict?date=${encodeURIComponent(dateString)}&category=${encodeURIComponent(category)}`;
-        
+
         console.log(`Fetching prediction from: ${url}`);
-        
+
         try {
-            const response = await fetch(url, { cache: 'no-store' });
+            // Forward cookies to bypass Vercel Authentication on preview deployments
+            const headerList = await headers();
+            const cookie = headerList.get("cookie");
+
+            const response = await fetch(url, {
+                cache: 'no-store',
+                headers: {
+                    ...(cookie ? { Cookie: cookie } : {}),
+                }
+            });
+
             if (!response.ok) {
                 const errorText = await response.text();
+                // If 401/403, it might still be auth related.
                 console.error(`Prediction API error (${response.status}) for URL ${url}: ${errorText}`);
                 throw new Error(`Prediction API failed: ${response.status}. ${errorText}`);
             }
