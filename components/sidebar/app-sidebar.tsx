@@ -7,7 +7,6 @@ import {
   Frame,
   GalleryVerticalEnd,
   LucideLock,
-  Settings2,
   SquareTerminal,
     LucideWrench,
 } from "lucide-react"
@@ -46,8 +45,8 @@ const data = {
       icon: Bot,
       items: [
         {
-          title: "Metrics",
-          url: "/ecommerce/analytics/metrics",
+          title: "Predictions",
+          url: "/ecommerce/analytics/predictions",
         },
         {
           title: "Reports",

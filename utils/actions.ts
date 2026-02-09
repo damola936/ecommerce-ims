@@ -1,14 +1,16 @@
 "use server"
 
-import {createClient} from "@/utils/supabase/server";
-import {redirect} from "next/navigation"
-import {imageSchema, productSchema, validateWithZodSchema} from "@/utils/schemas";
-import {uploadImagesToBucket} from "@/utils/supabase-image-upload";
-import {prisma} from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation"
+import { imageSchema, productSchema, validateWithZodSchema } from "@/utils/schemas";
+import { uploadImagesToBucket } from "@/utils/supabase-image-upload";
+import { prisma } from "@/lib/prisma";
 import slugify from "slugify";
-import {nanoid} from "nanoid";
-import {OrderStatus, ProductStatus} from "@/lib/generated/prisma";
+import { nanoid } from "nanoid";
+import { OrderStatus, ProductStatus } from "@/lib/generated/prisma";
 import {revalidatePath} from "next/cache";
+import {getTrafficPrediction} from "@/utils/prediction-service";
+import {PredictionResult} from "@/utils/types";
 
 const renderError = (error: unknown): { message: string } => {
     console.log(error);
@@ -29,7 +31,7 @@ export async function logIn(prevState: any, formData: FormData) {
     const supabase = await createClient()
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const {error} = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
         email, password
     })
     if (error) {
@@ -53,10 +55,10 @@ export async function createProductAction(prevState: any, formData: FormData) {
             throw new Error("Please select at least one category")
         }
         const stock = parseInt(formData.get("stock") as string)
-        const attributes = {color: color, size: size, weight: weight};
+        const attributes = { color: color, size: size, weight: weight };
         const validatedFields = validateWithZodSchema(productSchema, rawData)
         const validatedImages = imageFiles.map(image => {
-            const validatedImage = validateWithZodSchema(imageSchema, {image: image})
+            const validatedImage = validateWithZodSchema(imageSchema, { image: image })
             return validatedImage.image
         })
         const productVariant = {
@@ -76,13 +78,13 @@ export async function createProductAction(prevState: any, formData: FormData) {
         ])
         const imageConstructs = fullImagesPaths.map((image, index) => {
             if (index === 0) {
-                return {url: image, isPrimary: true}
-            } else return {url: image, isPrimary: false}
+                return { url: image, isPrimary: true }
+            } else return { url: image, isPrimary: false }
         })
         await prisma.product.create({
             data: {
                 ...validatedFields,
-                slug: slugify(productName, {lower: true, strict: true, trim: true}),
+                slug: slugify(productName, { lower: true, strict: true, trim: true }),
                 sku: generateSKU(brandName, categories[0]),
                 images: {
                     create: imageConstructs
@@ -92,15 +94,15 @@ export async function createProductAction(prevState: any, formData: FormData) {
                 },
                 categories: {
                     connectOrCreate: {
-                        where: {slug: slugify(categories[0], {lower: true, strict: true})},
+                        where: { slug: slugify(categories[0], { lower: true, strict: true }) },
                         create: {
                             name: categories[0],
-                            slug: slugify(categories[0], {lower: true, strict: true}),
+                            slug: slugify(categories[0], { lower: true, strict: true }),
                         }
                     }
                 },
                 brand: {
-                    connect: {id: brand.id}
+                    connect: { id: brand.id }
                 },
                 status: "PUBLISHED",
             }
@@ -111,7 +113,7 @@ export async function createProductAction(prevState: any, formData: FormData) {
     redirect("/ecommerce/products/all")
 }
 
-export const fetchAllProducts = async ({search, page = 1, pageSize = 7}: { search: string, page?: number, pageSize?: number }) => {
+export const fetchAllProducts = async ({ search, page = 1, pageSize = 7 }: { search: string, page?: number, pageSize?: number }) => {
     const skip = (page - 1) * pageSize;
 
     const [products, totalCount] = await Promise.all([
@@ -119,16 +121,16 @@ export const fetchAllProducts = async ({search, page = 1, pageSize = 7}: { searc
             where: {
                 OR: [
                     {
-                        name: {contains: search, mode: "insensitive"}
+                        name: { contains: search, mode: "insensitive" }
                     },
                     {
                         brand: {
-                            name: {contains: search, mode: "insensitive"}
+                            name: { contains: search, mode: "insensitive" }
                         }
                     }
                 ]
             },
-            include: {brand: true, variants: true, images: true, categories: true},
+            include: { brand: true, variants: true, images: true, categories: true },
             orderBy: {
                 createdAt: "desc"
             },
@@ -139,11 +141,11 @@ export const fetchAllProducts = async ({search, page = 1, pageSize = 7}: { searc
             where: {
                 OR: [
                     {
-                        name: {contains: search, mode: "insensitive"}
+                        name: { contains: search, mode: "insensitive" }
                     },
                     {
                         brand: {
-                            name: {contains: search, mode: "insensitive"}
+                            name: { contains: search, mode: "insensitive" }
                         }
                     }
                 ]
@@ -151,13 +153,13 @@ export const fetchAllProducts = async ({search, page = 1, pageSize = 7}: { searc
         })
     ]);
 
-    return {products, totalCount};
+    return { products, totalCount };
 }
 
 export const fetchSingleProduct = async (id: string) => {
     const product = await prisma.product.findUnique({
-        where: {id},
-        include: {brand: true, variants: true, images: true, categories: true},
+        where: { id },
+        include: { brand: true, variants: true, images: true, categories: true },
     })
     return product
 }
@@ -176,7 +178,7 @@ export const getProductsByStatus = async (status: ProductStatus) => {
 
 export const getAllOrders = async () => {
     const orders = await prisma.order.findMany({
-        include: {user: true, items: {include: {product: {include: {categories: true}}}}},
+        include: { user: true, items: { include: { product: { include: { categories: true } } } } },
         orderBy: {
             createdAt: "desc"
         }
@@ -217,9 +219,9 @@ export async function createBrandAction(prevState: any, formData: FormData) {
                 }
             })
             revalidatePath("/ecommerce/test/create")
-            return {message: "Brand created successfully."}
+            return { message: "Brand created successfully." }
         } else {
-            return {message: "Brand already exists."}
+            return { message: "Brand already exists." }
         }
     } catch (error) {
         return renderError(error);
@@ -230,7 +232,7 @@ export async function createUserAction(prevState: any, formData: FormData) {
     try {
         const email = (formData.get("email") as string)?.trim();
         if (!email) {
-            return {message: "Email is required."}
+            return { message: "Email is required." }
         }
         const existingUser = await prisma.user.findFirst({
             where: {
@@ -244,9 +246,9 @@ export async function createUserAction(prevState: any, formData: FormData) {
                 }
             })
             revalidatePath("/ecommerce/test/create")
-            return {message: "User created successfully."}
+            return { message: "User created successfully." }
         } else {
-            return {message: "User already exists."}
+            return { message: "User already exists." }
         }
     } catch (error) {
         return renderError(error);
@@ -261,8 +263,8 @@ export async function createOrderAction(prevState: any, formData: FormData) {
         const quantity = parseInt(formData.get("quantity") as string);
         // get user and product for our order
         const [user, productToOrder] = await Promise.all([
-            prisma.user.findFirst({where: {email: userEmail}}),
-            prisma.product.findFirst({where: {name: productName}})
+            prisma.user.findFirst({ where: { email: userEmail } }),
+            prisma.product.findFirst({ where: { name: productName } })
         ])
         if (user && productToOrder) {
             await prisma.order.create({
@@ -282,7 +284,7 @@ export async function createOrderAction(prevState: any, formData: FormData) {
             })
         }
         revalidatePath("/ecommerce/test/create")
-        return {message: "Order created successfully."}
+        return { message: "Order created successfully." }
     } catch (error) {
         return renderError(error);
     }
@@ -292,8 +294,8 @@ export async function createCategoryAction(prevState: any, formData: FormData) {
     try {
         const categoryName = formData.get("category") as string;
         const productName = formData.get("product") as string;
-        const product = await prisma.product.findFirst({where: {name: productName}})
-        const slug = slugify(categoryName, {lower: true, strict: true, trim: true})
+        const product = await prisma.product.findFirst({ where: { name: productName } })
+        const slug = slugify(categoryName, { lower: true, strict: true, trim: true })
         if (product) {
             await prisma.category.create({
                 data: {
@@ -308,7 +310,7 @@ export async function createCategoryAction(prevState: any, formData: FormData) {
             })
         }
         revalidatePath("/ecommerce/test/create")
-        return {message: "Category created successfully."}
+        return { message: "Category created successfully." }
     } catch (error) {
         return renderError(error);
     }
@@ -326,18 +328,18 @@ export const createVariantAction = async (prevState: any, formData: FormData) =>
         const height = parseFloat(formData.get("height") as string);
 
         const product = await prisma.product.findFirst({
-            where: {name: productName},
-            include: {brand: true, categories: true},
+            where: { name: productName },
+            include: { brand: true, categories: true },
         })
 
         if (!product) {
-            return {message: "Product not found."}
+            return { message: "Product not found." }
         }
 
         const brandName = product.brand?.name || product.name;
         const categoryName = product.categories[0]?.name || "GEN";
-        const attributes = {color: color, size: size, weight: weight};
-        const dimensions = {length: length, width: width, height: height};
+        const attributes = { color: color, size: size, weight: weight };
+        const dimensions = { length: length, width: width, height: height };
         const price = Number(product.basePrice) + 10;
 
         await prisma.productVariant.create({
@@ -352,7 +354,7 @@ export const createVariantAction = async (prevState: any, formData: FormData) =>
             }
         })
         revalidatePath("/ecommerce/test/create")
-        return {message: "Variant created successfully."}
+        return { message: "Variant created successfully." }
     } catch (error) {
         return renderError(error);
     }
@@ -382,7 +384,7 @@ export type HiLoOrder = {
 
 export const fetchFebHiLoOrderCategory = async () => {
     try {
-        const highest_category:highestCat[] = await prisma.$queryRaw`
+        const highest_category: highestCat[] = await prisma.$queryRaw`
             SELECT 
                 c."name" as "highestCategory", 
                 COUNT(oi."id")::text as "hNo"
@@ -396,9 +398,9 @@ export const fetchFebHiLoOrderCategory = async () => {
             ORDER BY COUNT(oi."id") DESC 
             LIMIT 1
         `;
-        const lowest_category:lowestCat[] = await prisma.$queryRaw`
+        const lowest_category: lowestCat[] = await prisma.$queryRaw`
             SELECT 
-                c."name" as "lowestcategory", 
+                c."name" as "lowestCategory", 
                 COUNT(oi."id")::text as "lNo"
             FROM "Order" o
             JOIN "OrderItem" oi ON o."id" = oi."orderId"
@@ -410,8 +412,8 @@ export const fetchFebHiLoOrderCategory = async () => {
             ORDER BY COUNT(oi."id") ASC 
             LIMIT 1
         `;
-        const results:HiLoOrder[] = highest_category.map((highest, index) => {
-            return {...highest, month: "February", ...lowest_category[index]}
+        const results: HiLoOrder[] = highest_category.map((highest, index) => {
+            return { ...highest, month: "February", ...lowest_category[index] }
         })
         return results;
     } catch (error) {
@@ -421,7 +423,7 @@ export const fetchFebHiLoOrderCategory = async () => {
 
 export const fetch5HiLoStocks = async () => {
     const productsWithVariant = await prisma.product.findMany({
-        include: {variants: true},
+        include: { variants: true },
     })
     const allStocks = productsWithVariant.map((product) => {
         return {
@@ -432,5 +434,15 @@ export const fetch5HiLoStocks = async () => {
     const orderedStocks = allStocks.sort((a, b) => b.stock - a.stock) // sort in descending order
     const top5Stocks = orderedStocks.slice(0, 5) // take the top 5 stocks
     const bottom5Stocks = orderedStocks.slice(-5) // take the bottom 5 stocks
-    return {top5Stocks, bottom5Stocks}
+    return { top5Stocks, bottom5Stocks }
 }
+
+export async function predictTrafficAction(date: string, category: string): Promise<PredictionResult | {message: string}> {
+    try {
+        const prediction:PredictionResult = await getTrafficPrediction(date, category);
+        return prediction;
+    } catch (error) {
+        return renderError(error);
+    }
+}
+

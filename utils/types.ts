@@ -8,3 +8,12 @@ export type FullProduct = Prisma.ProductGetPayload<{
 
 export type FullOrder = Prisma.OrderGetPayload<{ include: {user: true, items: {include: {product: {include: {categories: true}}}}} }>
 
+export type TimeFrame = "next 7 days" | "next 30 days" | "next 3 months"
+
+export interface PredictionResult {
+    date: string;
+    mobile: number;
+    desktop: number;
+    error?: string;
+}
+

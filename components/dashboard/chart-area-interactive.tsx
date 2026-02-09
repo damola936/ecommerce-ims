@@ -34,7 +34,7 @@ import {AreaChartData} from "@/utils/area-chart-data";
 export const description = "An interactive area chart"
 
 
-const chartConfig = {
+const defaultChartConfig = {
     visitors: {
         label: "Visitors",
     },
@@ -48,7 +48,7 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export function ChartAreaInteractive({chartData, title}: {chartData: AreaChartData, title: string}) {
+export function ChartAreaInteractive({chartData, title, chartConfig = defaultChartConfig}: {chartData: AreaChartData, title: string, chartConfig?: ChartConfig}) {
     const id = React.useId().replace(/:/g, "") //svg ID collisions cause area chart bug while navigating
     const isMobile = useIsMobile()
     const [timeRange, setTimeRange] = React.useState("90d")
@@ -63,10 +63,13 @@ export function ChartAreaInteractive({chartData, title}: {chartData: AreaChartDa
         const date = new Date(item.date)
         const referenceDate = new Date("2024-06-30") //I think this is meant to be the current date
         let daysToSubtract = 90
-        if (timeRange === "30d") {
-            daysToSubtract = 30
-        } else if (timeRange === "7d") {
-            daysToSubtract = 7
+        switch (timeRange) {
+            case "30d":
+                daysToSubtract = 30
+                break
+            case "7d":
+                daysToSubtract = 7
+                break
         }
         const startDate = new Date(referenceDate)
         startDate.setDate(startDate.getDate() - daysToSubtract)

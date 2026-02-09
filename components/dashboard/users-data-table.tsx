@@ -21,21 +21,12 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import {
-    IconChevronDown,
     IconChevronLeft,
     IconChevronRight,
     IconChevronsLeft,
     IconChevronsRight,
-    IconCircleCheckFilled,
-    IconCircleXFilled,
-    IconClock,
     IconDotsVertical,
     IconGripVertical,
-    IconLayoutColumns,
-    IconLoader,
-    IconPlus,
-    IconRefresh,
-    IconSettings,
     IconTrendingUp,
 } from "@tabler/icons-react"
 import {
@@ -54,11 +45,9 @@ import {
     type VisibilityState,
 } from "@tanstack/react-table"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     ChartContainer,
@@ -79,7 +68,6 @@ import {
 } from "@/components/ui/drawer"
 import {
     DropdownMenu,
-    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
@@ -103,14 +91,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@/components/ui/tabs"
-import {Categories} from "@/utils/ModelData";
-import {cn} from "@/lib/utils";
 import {SubmitButton} from "@/components/form/buttons";
 
 
