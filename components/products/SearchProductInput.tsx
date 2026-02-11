@@ -6,25 +6,26 @@ import {
     InputGroupButton,
     InputGroupInput,
 } from "@/components/ui/input-group"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { useDebouncedCallback } from "use-debounce"
-import { useState} from "react"
+import { useState } from "react"
 
-import {SearchIcon} from "lucide-react";
+import { SearchIcon } from "lucide-react";
 
 function SearchProductInput() {
     const searchParams = useSearchParams()
-    const {replace} = useRouter()
+    const pathname = usePathname()
+    const { replace } = useRouter()
     const [search, setSearch] = useState(searchParams.get("search")?.toString() || "")
     const handleSearch = useDebouncedCallback((value: string) => {
         const params = new URLSearchParams(searchParams)
-        if(value) {
+        if (value) {
             params.set("search", value)
         }
         else {
             params.delete("search")
         }
-        replace(`/ecommerce/products/all?${params.toString()}`)
+        replace(`${pathname}?${params.toString()}`)
     }, 500)
 
     return (

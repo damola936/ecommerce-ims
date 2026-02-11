@@ -1,12 +1,11 @@
-import { z, ZodSchema } from "zod";
-
+import {z, ZodSchema} from "zod";
 
 
 export const productSchema = z.object({
     name: z
         .string()
-        .min(3, { message: "Name cannot be less that 3 letters" })
-        .max(100, { message: "Name cannot be more that 100 letters" }),
+        .min(3, {message: "Name cannot be less that 3 letters"})
+        .max(100, {message: "Name cannot be more that 100 letters"}),
 
     description: z.string().refine(
         (description) => {
@@ -20,13 +19,13 @@ export const productSchema = z.object({
     basePrice: z.coerce.number().min(0, {
         message: 'price must be a positive number.',
     }),
-    brand: z.string().refine((brand) => brand.length > 0, { message: "Brand cannot be empty" }),
-    categories: z.array(z.string().refine((category) => category.length > 0, { message: "Category cannot be empty" })).nonempty({ message: "Please select at least one category" }),
-    color: z.string().refine((colors) => colors.length > 0, { message: "Colors cannot be empty" }),
-    size: z.string().refine((sizes) => sizes.length > 0, { message: "Sizes cannot be empty" }),
-    weight: z.coerce.number().min(0, { message: "Weight must be a positive number." }),
-    stock: z.coerce.number().int().min(0, { message: "Stock must be a positive number." }),
-    images: z.array(validateImageFile()).min(1, { message: "At least one image is required" }),
+    brand: z.string().refine((brand) => brand.length > 0, {message: "Brand cannot be empty"}),
+    categories: z.array(z.string().refine((category) => category.length > 0, {message: "Category cannot be empty"})).nonempty({message: "Please select at least one category"}),
+    color: z.string().refine((colors) => colors.length > 0, {message: "Colors cannot be empty"}),
+    size: z.string().refine((sizes) => sizes.length > 0, {message: "Sizes cannot be empty"}),
+    weight: z.coerce.number().min(0, {message: "Weight must be a positive number."}),
+    stock: z.coerce.number().int().min(0, {message: "Stock must be a positive number."}),
+    images: z.array(validateImageFile()).min(1, {message: "At least one image is required"}),
 })
 
 export const ProductImageSchema = z.object({
@@ -63,15 +62,21 @@ export const ProductVariantSchema = z.object({
 export const CategorySchema = z.object({
     name: z
         .string()
-        .min(3, { message: "Name cannot be less that 3 letters" })
-        .max(100, { message: "Name cannot be more that 100 letters" }),
+        .min(3, {message: "Name cannot be less that 3 letters"})
+        .max(100, {message: "Name cannot be more that 100 letters"}),
 })
 
 export const BrandSchema = z.object({
     name: z
         .string()
-        .min(3, { message: "Name cannot be less that 3 letters" })
-        .max(100, { message: "Name cannot be more that 100 letters" }),
+        .min(3, {message: "Name cannot be less that 3 letters"})
+        .max(100, {message: "Name cannot be more that 100 letters"}),
+})
+
+export const ReportSchema = z.object({
+    title: z.string().min(3, {message: "Title cannot be less that 3 letters"}),
+    images: validateImageFile(),
+    content: z.string().min(100, {message: "Content cannot be less that 100 letters"}),
 })
 
 export function validateWithZodSchema<T>(schema: ZodSchema<T>, data: unknown): T {

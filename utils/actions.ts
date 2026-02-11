@@ -2,8 +2,8 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation"
-import { productSchema, validateWithZodSchema } from "@/utils/schemas";
-import { uploadImagesToBucket } from "@/utils/supabase-image-upload";
+import { productSchema, ReportSchema, validateWithZodSchema } from "@/utils/schemas";
+import { uploadImagesToBucket, uploadImageToBucket } from "@/utils/supabase-image-upload";
 import { prisma } from "@/lib/prisma";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
@@ -463,5 +463,66 @@ export async function predictTrafficAction(date: string, category: string): Prom
     } catch (error) {
         return renderError(error);
     }
+}
+
+export async function createReportAction(prevState: any, formData: FormData) {
+    try {
+        const content = Object.fromEntries(formData)
+        const validatedData = validateWithZodSchema(ReportSchema, content)
+        const validatedCoverImage = validatedData.images
+        const imagePath = await uploadImageToBucket(validatedCoverImage)
+
+        await prisma.report.create({
+            data: {
+                title: validatedData.title,
+                content: validatedData.content,
+                coverImg: imagePath,
+            },
+        });
+
+        revalidatePath("/ecommerce/analytics/reports");
+        return { message: "Report created successfully." }
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export const fetchAllReports = async ({ search, page = 1, pageSize = 7 }: {
+    search: string,
+    page?: number,
+    pageSize?: number
+}) => {
+    const skip = (page - 1) * pageSize;
+    const [reports, totalCount] = await Promise.all([
+        prisma.report.findMany({
+            where: {
+                OR: [
+                    {title: { contains: search, mode: "insensitive" }},
+                    {content: { contains: search, mode: "insensitive" }}
+                ]
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip,
+            take: pageSize
+        }),
+        prisma.report.count({
+            where: {
+                OR: [
+                    {title: { contains: search, mode: "insensitive" }},
+                    {content: { contains: search, mode: "insensitive" }}
+                ]
+            }
+        })
+    ])
+    return {reports, totalCount}
+}
+
+export const fetchReportById = async (id: string) => {
+    const report = await prisma.report.findUnique({
+        where: { id },
+    })
+    return report
 }
 
