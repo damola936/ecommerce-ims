@@ -1,6 +1,6 @@
 import { fetchReportById } from "@/utils/actions";
 import SectionTitle from "@/components/global/SectionTitle";
-import DOMPurify from "isomorphic-dompurify"
+import sanitizeHtml from "sanitize-html"
 import BreadcrumbComponent from "@/components/breadcrumbs/breadcrumbs";
 import { Calendar, Clock, Share2, Info } from "lucide-react";
 
@@ -26,9 +26,17 @@ async function SingleReportPage({ params }: { params: Promise<{ id: string }> })
             // keep as is
         }
 
-        const cleanContent = DOMPurify.sanitize(displayContent, {
-            ADD_TAGS: ["iframe"],
-            ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling"]
+        const cleanContent = sanitizeHtml(displayContent, {
+            allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+                "iframe", "img", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "code", "pre"
+            ]),
+            allowedAttributes: {
+                ...sanitizeHtml.defaults.allowedAttributes,
+                "iframe": ["allow", "allowfullscreen", "frameborder", "scrolling", "src", "width", "height"],
+                "img": ["src", "alt", "title", "width", "height", "loading"],
+                "code": ["class"],
+                "*": ["class", "id", "style"]
+            }
         })
 
         return (
