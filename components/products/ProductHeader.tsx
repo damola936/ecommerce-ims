@@ -1,13 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/form/buttons";
+import RestockDialog from "@/components/products/RestockDialog";
+import { ProductVariant } from "@/lib/generated/prisma";
 
 interface ProductHeaderProps {
   name: string;
   sku: string;
-  status: string
+  status: string;
+  id: string;
+  variants: ProductVariant[]
 }
 
-export function ProductHeader({ name, sku, status }: ProductHeaderProps) {
+export function ProductHeader({ name, sku, status, id, variants }: ProductHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
       <div>
@@ -18,9 +22,9 @@ export function ProductHeader({ name, sku, status }: ProductHeaderProps) {
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <SubmitButton text="edit" size="sm" variant="secondary" />
-        <SubmitButton text="restock" size="sm" />
-        <SubmitButton text="archive" size="sm" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10" />
+        <SubmitButton text="edit" size="lg" variant="outline" className="capitalize" />
+        <RestockDialog name={name} id={id} variants={variants} />
+        <SubmitButton text="archive" size="lg" variant="outline" className="border-destructive text-destructive hover:bg-destructive/10 capitalize" />
       </div>
     </div>
   );

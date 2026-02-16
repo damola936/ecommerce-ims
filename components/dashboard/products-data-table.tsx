@@ -82,8 +82,7 @@ import { cn } from "@/lib/utils"
 import Link from "next/link";
 
 export const ProductsTableSchema = z.object({
-    id: z.number(),
-    productId: z.string(),
+    id: z.string(),
     name: z.string(),
     image: z.string(),
     category: z.string(),
@@ -113,7 +112,7 @@ export const getCategoryBadgeClass = (category: string) => {
 }
 
 // Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
+function DragHandle({ id }: { id: string }) {
     const { attributes, listeners } = useSortable({
         id,
     })

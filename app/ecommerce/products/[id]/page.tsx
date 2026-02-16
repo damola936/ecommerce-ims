@@ -20,7 +20,7 @@ async function SingleProductPage({ params }: { params: Promise<{ id: string }> }
         </Container>
     );
 
-    const { name, sku, images, brand, variants = [], categories = [], basePrice, description } = product;
+    const { id:productId, name, sku, images, brand, variants = [], categories = [], basePrice, description } = product;
     const totalStock = variants.reduce((acc, curr) => acc + (curr.stock || 0), 0);
     const categoryNames = categories.map(c => c.name);
 
@@ -31,7 +31,7 @@ async function SingleProductPage({ params }: { params: Promise<{ id: string }> }
                 child={{ label: name }}
             />
             <Container className="py-6 max-w-full">
-                <ProductHeader name={name} sku={sku} status={product.status} />
+                <ProductHeader name={name} sku={sku} status={product.status} id={productId} variants={variants} />
 
                 <InventoryStats totalStock={totalStock} />
 

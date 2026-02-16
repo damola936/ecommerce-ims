@@ -14,9 +14,9 @@ async function DashBoardOverviewPage() {
         getAllUsers(),
         fetchAllProducts({search: "", pageSize: 100})
     ])
-    const orderData = orders.map((order: FullOrder, index) => {
+    const orderData = orders.map((order: FullOrder) => {
         return {
-            id: index,
+            id: order.id,
             email: order.user.email,
             name: order.items.map(item => item.product.name)[0], //pick the first, in the category array
             category: order.items.map(item => item.product.categories[0].name)[0], //pick the first in the items array
@@ -26,14 +26,13 @@ async function DashBoardOverviewPage() {
         }
     })
 
-    const userDetails = await Promise.all(users.map(async (user, index) => ({
+    const userDetails = await Promise.all(users.map(async (user) => ({
         ...user,
         totalOrders: await getUserOrdersLength(user.id),
-        id: index
     }))) // map does not wait for async callbacks. It instead gives an array of promises, Promise.all will resolve them
     // in the future accept more items and categories, pass them as arrays, change the data table schema to accept arrays, and then alter items name to add ... to the end of the first and omit the two, then on the edit modal show the full names, flex the categories tags or grid them
 
-    const productTableData = products.map((product, index) => {
+    const productTableData = products.map((product) => {
         const primaryImage =
             product.images.find((image) => image.isPrimary) || product.images[0]
         const primaryCategory = product.categories[0]?.name || "Uncategorized"
@@ -43,8 +42,7 @@ async function DashBoardOverviewPage() {
         )
 
         return {
-            id: index,
-            productId: product.id,
+            id: product.id,
             name: product.name,
             image: primaryImage?.url || "",
             category: primaryCategory,

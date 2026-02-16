@@ -96,14 +96,14 @@ import {SubmitButton} from "@/components/form/buttons";
 
 
 export const UsersTableSchema = z.object({
-    id: z.number(),
+    id: z.string(),
     email: z.string(),
     totalOrders: z.number(),
 })
 
 
 // Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
+function DragHandle({ id }: { id: string }) {
     const { attributes, listeners } = useSortable({
         id,
     })

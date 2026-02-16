@@ -497,8 +497,8 @@ export const fetchAllReports = async ({ search, page = 1, pageSize = 7 }: {
         prisma.report.findMany({
             where: {
                 OR: [
-                    {title: { contains: search, mode: "insensitive" }},
-                    {content: { contains: search, mode: "insensitive" }}
+                    { title: { contains: search, mode: "insensitive" } },
+                    { content: { contains: search, mode: "insensitive" } }
                 ]
             },
             orderBy: {
@@ -510,13 +510,13 @@ export const fetchAllReports = async ({ search, page = 1, pageSize = 7 }: {
         prisma.report.count({
             where: {
                 OR: [
-                    {title: { contains: search, mode: "insensitive" }},
-                    {content: { contains: search, mode: "insensitive" }}
+                    { title: { contains: search, mode: "insensitive" } },
+                    { content: { contains: search, mode: "insensitive" } }
                 ]
             }
         })
     ])
-    return {reports, totalCount}
+    return { reports, totalCount }
 }
 
 export const fetchReportById = async (id: string) => {
@@ -524,5 +524,39 @@ export const fetchReportById = async (id: string) => {
         where: { id },
     })
     return report
+}
+
+export const updateOrderStatusAction = async (prevState: any, formData: FormData) => {
+    const id = formData.get("id") as string;
+    const status = formData.get("status") as OrderStatus;
+    await prisma.order.update({
+        where: { id },
+        data: { status }
+    })
+    revalidatePath("/ecommerce/dashboard/overview")
+    return { message: "Order status updated successfully." }
+}
+
+export const restockProductAction = async (prevState: any, formData: FormData) => {
+    const id = formData.get("id") as string;
+    const stock = parseInt(formData.get("stock") as string);
+    const variantId = formData.get("variantId") as string;
+    await prisma.product.update({
+        where: { id },
+        data: {
+            variants: {
+                update: {
+                    where: { id: variantId },
+                    data: {
+                        stock: {
+                            increment: stock
+                        }
+                    }
+                }
+            }
+        }
+    })
+    revalidatePath(`/ecommerce/products/${id}`)
+    return { message: "Product restocked successfully." }
 }
 
