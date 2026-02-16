@@ -188,7 +188,7 @@ const productColumns: ColumnDef<z.infer<typeof ProductsTableSchema>>[] = [
         accessorKey: "name",
         header: "Product",
         cell: ({ row }) =>
-            <Link href={`/ecommerce/products/${row.original.productId}`} className={"hover:underline"}><h2 className="font-medium">{row.original.name}</h2></Link>,
+            <Link href={`/ecommerce/products/${row.original.id}`} className={"hover:underline"}><h2 className="font-medium">{row.original.name}</h2></Link>,
         enableHiding: false,
     },
     {
