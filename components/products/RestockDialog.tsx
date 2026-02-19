@@ -14,15 +14,16 @@ import NumberInput from "@/components/form/NumberInput";
 import FormContainer from "@/components/form/FormContainer";
 import { restockProductAction } from "@/utils/actions";
 import { Button } from "@/components/ui/button";
-import { ProductVariant } from "@/lib/generated/prisma";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectLabel, SelectGroup } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {CorrectedProductVariant} from "@/components/products/EditProductDialog";
 
-function RestockDialog({ name, id, variants }: { name: string, id: string, variants: ProductVariant[] }) {
+
+function RestockDialog({ name, id, variants }: { name: string, id: string, variants: CorrectedProductVariant[] }) {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button size="lg" className="capitalize">restock</Button>
+                <Button size="lg" className="capitalize cursor-pointer">restock</Button>
             </DialogTrigger>
             <DialogContent className={"sm:max-w-md md:max-w-lg lg:max-w-xl"}>
                 <FormContainer action={restockProductAction}>
@@ -47,8 +48,8 @@ function RestockDialog({ name, id, variants }: { name: string, id: string, varia
                                     <SelectGroup>
                                         <SelectLabel>Variants</SelectLabel>
                                         {variants.map((variant) => (
-                                            <SelectItem key={variant.id} value={variant.id}>
-                                                {variant.id}
+                                            <SelectItem key={variant.id} value={variant.attributes?.color}>
+                                                {variant.attributes?.color}
                                             </SelectItem>
                                         ))}
                                     </SelectGroup>

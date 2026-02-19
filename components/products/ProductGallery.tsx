@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import {useState} from "react";
+import AddImageDialog from "./AddImageDialog";
 
 interface ProductImage {
   url: string;
@@ -12,9 +13,10 @@ interface ProductImage {
 interface ProductGalleryProps {
   images: ProductImage[];
   name: string;
+  id: string;
 }
 
-export function ProductGallery({ images, name }: ProductGalleryProps) {
+export function ProductGallery({ images, name, id }: ProductGalleryProps) {
   const primaryImage = images.find(img => img.isPrimary) || images[0];
   const [imageUrl, setImageUrl] = useState(primaryImage.url)
 
@@ -54,6 +56,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
           ))}
         </div>
       )}
+      <AddImageDialog id={id} />
     </div>
   );
 }

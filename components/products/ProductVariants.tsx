@@ -38,7 +38,7 @@ export function ProductVariants({variants, basePrice}: {variants: ProductVariant
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right font-medium">
-                    {v.price ? `$${Number(v.price).toFixed(2)}` : basePrice.toFixed(2)}
+                    {v.price ? `$${Number(v.price).toFixed(2)}` : `$${basePrice.toFixed(2)}`}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className={`font-semibold ${v.stock < 10 ? 'text-destructive' : 'text-foreground'}`}>

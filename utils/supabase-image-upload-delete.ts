@@ -33,3 +33,9 @@ export const uploadImageToBucket = async (image: File) => {
     if (!data) throw new Error("Could not upload image");
     return supabaseClient.storage.from(bucket).getPublicUrl(newName).data.publicUrl;
 };
+
+export const deleteImageFromBucket = (url: string) => {
+    const imageName = url.split("/").pop();
+    if (!imageName) throw new Error("Invalid Image URL");
+    return supabaseClient.storage.from(bucket).remove([imageName]);
+};

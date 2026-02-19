@@ -15,10 +15,10 @@ import FormInput from "@/components/form/FormInput";
 import NumberInput from "@/components/form/NumberInput";
 import TextAreaInput from "@/components/form/TextAreaInput";
 import SelectInputCategory from "@/components/form/SelectInputCategory";
-import { Categories, ColorCategories, SizeCategories } from "@/utils/ModelData";
+import { ColorCategories, SizeCategories } from "@/utils/ModelData";
 import { InputFile } from "@/components/form/InputFile";
 import FormContainer from "@/components/form/FormContainer";
-import {createProductAction, fetchAllBrands} from "@/utils/actions";
+import { createProductAction, fetchAllBrands, fetchAllProductCategories } from "@/utils/actions";
 import { SubmitButton } from "@/components/form/buttons";
 import { faker } from "@faker-js/faker";
 
@@ -27,7 +27,9 @@ async function CreateProductComponent() {
     const price = parseInt(faker.commerce.price())
     const description = faker.lorem.sentence({ min: 30, max: 80 })
     const brands = await fetchAllBrands()
-    const brandCategories = brands.map(brand => ({category: brand.name}))
+    const brandCategories = brands.map(brand => ({ category: brand.name }))
+    const productCategories = await fetchAllProductCategories()
+    const categories = productCategories.map(category => ({ category: category.name }))
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -43,7 +45,7 @@ async function CreateProductComponent() {
                     </CardContent>
                 </Card>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
+            <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl">
                 <FormContainer action={createProductAction}>
                     <DialogHeader>
                         <DialogTitle>Create Product</DialogTitle>
@@ -62,7 +64,7 @@ async function CreateProductComponent() {
                             <SelectInputCategory items={brandCategories} label={"Brand"} name={"brand"} />
                         </div>
                         <div className="grid gap-3">
-                            <SelectInputCategory items={Categories} label={"Categories"} name={"categories"} />
+                            <SelectInputCategory items={categories} label={"Categories"} name={"categories"} />
                         </div>
                         <div className="grid gap-3 ml-2">
                             <NumberInput defaultValue={100} name={"stock"} label={"Stock"} />

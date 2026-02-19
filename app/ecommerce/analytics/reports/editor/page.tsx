@@ -7,7 +7,7 @@ import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { createReportAction } from "@/utils/actions";
 import BreadcrumbComponent from "@/components/breadcrumbs/breadcrumbs";
 import { SubmitButton } from "@/components/form/buttons";
-import { uploadImageToBucket } from "@/utils/supabase-image-upload";
+import { uploadImageToBucket } from "@/utils/supabase-image-upload-delete";
 import FormInput from "@/components/form/FormInput";
 import { InputFile } from "@/components/form/InputFile";
 import { faker } from "@faker-js/faker";

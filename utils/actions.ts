@@ -2,8 +2,8 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation"
-import { productSchema, ReportSchema, validateWithZodSchema } from "@/utils/schemas";
-import { uploadImagesToBucket, uploadImageToBucket } from "@/utils/supabase-image-upload";
+import { ProductSchema, ReportSchema, ImageSchema, validateWithZodSchema, EditedProductSchema } from "@/utils/schemas";
+import { uploadImagesToBucket, uploadImageToBucket, deleteImageFromBucket } from "@/utils/supabase-image-upload-delete";
 import { prisma } from "@/lib/prisma";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
@@ -49,7 +49,7 @@ export async function createProductAction(prevState: any, formData: FormData) {
             (file) => file.name !== "undefined" && file.size > 0
         );
 
-        const validatedFields = validateWithZodSchema(productSchema, {
+        const validatedFields = validateWithZodSchema(ProductSchema, {
             ...rawData,
             categories,
             images: imageFiles,
@@ -380,7 +380,7 @@ export const createVariantAction = async (prevState: any, formData: FormData) =>
 }
 
 export const fetchAllBrands = async () => {
-    const brands = await prisma.brand.findMany()
+    const brands = await prisma.brand.findMany({})
     return brands
 }
 
@@ -558,5 +558,150 @@ export const restockProductAction = async (prevState: any, formData: FormData) =
     })
     revalidatePath(`/ecommerce/products/${id}`)
     return { message: "Product restocked successfully." }
+}
+
+export const editProductAction = async (prevState: any, formData: FormData) => {
+    const name = formData.get("name") as string
+    const price = parseInt(formData.get("price") as string)
+    const brand = formData.get("brand") as string
+    const categories = formData.getAll("categories") as string[]
+    const color = formData.get("color") as string
+    const size = formData.get("size") as string
+    const weight = parseInt(formData.get("weight") as string)
+    const stock = parseInt(formData.get("stock") as string)
+    const description = formData.get("description") as string
+    const length = parseInt(formData.get("length") as string)
+    const width = parseInt(formData.get("width") as string)
+    const height = parseInt(formData.get("height") as string)
+    const productId = formData.get("productId") as string
+    const variantId = formData.get("variantId") as string
+
+    const validatingData = {
+        name,
+        price,
+        brand,
+        categories,
+        color,
+        size,
+        weight,
+        stock,
+        description,
+    }
+    const validatedData = validateWithZodSchema(EditedProductSchema, validatingData)
+
+    // Fetch the existing variant to merge attributes and preserve other fields
+    const currentVariant = await prisma.productVariant.findUnique({
+        where: { id: variantId }
+    })
+
+    const attributes = {
+        ...(currentVariant?.attributes as Record<string, any> || {}),
+        color,
+        size,
+        weight
+    }
+    const dimensions = {
+        width,
+        length,
+        height
+    }
+
+    await prisma.product.update({
+        where: { id: productId },
+        data: {
+            name: validatedData.name,
+            slug: slugify(validatedData.name, { lower: true, strict: true }),
+            brand: {
+                connectOrCreate: {
+                    where: { name: validatedData.brand },
+                    create: { name: validatedData.brand }
+                }
+            },
+            description: validatedData.description,
+            categories: {
+                set: [], // Disconnect existing categories
+                connectOrCreate: validatedData.categories.map((cat: string) => {
+                    const slug = slugify(cat, { lower: true, strict: true });
+                    return {
+                        where: { slug },
+                        create: { name: cat, slug }
+                    }
+                })
+            },
+            variants: {
+                update: {
+                    where: { id: variantId },
+                    data: {
+                        price,
+                        attributes,
+                        dimensions,
+                        stock
+                    }
+                }
+            }
+        }
+    })
+    revalidatePath(`/ecommerce/products/${productId}`)
+    return { message: "Product Edited Successfully" }
+}
+
+export const addImageAction = async (prevState: any, formData: FormData) => {
+    try {
+        const id = formData.get("id") as string;
+        const images = formData.getAll("images") as File[];
+
+        const validatedData = validateWithZodSchema(ImageSchema, { images });
+        const imageUrls = await uploadImagesToBucket(validatedData.images);
+
+        await prisma.product.update({
+            where: { id },
+            data: {
+                images: {
+                    createMany: {
+                        data: imageUrls.map((url) => ({
+                            url,
+                            isPrimary: false,
+                        })),
+                    },
+                },
+            },
+        });
+
+        revalidatePath(`/ecommerce/products/${id}`);
+        return { message: "Images added successfully." };
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export const deleteProductImageAction = async (prevState: any, formData: FormData) => {
+    try {
+        const imageId = formData.get("imageId") as string;
+        const productId = formData.get("productId") as string;
+        const imageUrl = formData.get("imageUrl") as string;
+
+        // Delete from Supabase
+        await deleteImageFromBucket(imageUrl);
+
+        // Delete from Database
+        await prisma.productImage.delete({
+            where: { id: imageId },
+        });
+
+        revalidatePath(`/ecommerce/products/${productId}`);
+        return { message: "Image deleted successfully." };
+    } catch (error) {
+        return renderError(error);
+    }
+}
+
+export const fetchAllProductCategories = async () => {
+    const categories = await prisma.category.findMany({
+        select: {
+            id: true,
+            name: true,
+        }
+    })
+    return categories
 }
 
