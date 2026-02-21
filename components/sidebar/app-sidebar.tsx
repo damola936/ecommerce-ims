@@ -9,6 +9,7 @@ import {
   LucideLock,
   SquareTerminal,
     LucideWrench,
+    Archive
 } from "lucide-react"
 
 import { NavMain } from "@/components/sidebar/nav-main"
@@ -114,6 +115,17 @@ const data = {
         }
       ]
     },
+    {
+      title: "Archives",
+      url: "/ecommerce/archives/",
+      icon: Archive,
+      items: [
+        {
+          title: "All Archives",
+          url: "/ecommerce/archives/all"
+        }
+      ]
+    }
   ],
 }
 

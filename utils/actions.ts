@@ -147,7 +147,7 @@ export const fetchAllProducts = async ({ search, page = 1, pageSize = 7 }: {
                             name: { contains: search, mode: "insensitive" }
                         }
                     }
-                ]
+                ],
             },
             include: { brand: true, variants: true, images: true, categories: true },
             orderBy: {
@@ -404,7 +404,7 @@ export type HiLoOrder = {
 export const fetchFebHiLoOrderCategory = async () => {
     try {
         const highest_category: highestCat[] = await prisma.$queryRaw`
-            SELECT c."name"             as "highestCategory",
+            SELECT c."name" as "highestCategory",
                    COUNT(oi."id")::text as "hNo"
             FROM "Order" o
                      JOIN "OrderItem" oi ON o."id" = oi."orderId"
@@ -417,7 +417,7 @@ export const fetchFebHiLoOrderCategory = async () => {
             LIMIT 1
         `;
         const lowest_category: lowestCat[] = await prisma.$queryRaw`
-            SELECT c."name"             as "lowestCategory",
+            SELECT c."name" as "lowestCategory",
                    COUNT(oi."id")::text as "lNo"
             FROM "Order" o
                      JOIN "OrderItem" oi ON o."id" = oi."orderId"
@@ -703,5 +703,55 @@ export const fetchAllProductCategories = async () => {
         }
     })
     return categories
+}
+
+export const createArchiveAction = async (prevState: any, formData: FormData) => {
+    const productId = formData.get("id") as string;
+    await prisma.product.update({
+        where: { id: productId },
+        data: {
+            isArchived: true,
+            status: "ARCHIVED",
+            archive: {
+                create: {} //create a new archive linked to the product
+            }
+        }
+    })
+    revalidatePath(`/ecommerce/products/${productId}`)
+    return { message: "Archive created successfully." }
+}
+
+export const isProductArchived = async (id: string) => {
+    const product = await fetchSingleProduct(id)
+    return product?.isArchived;
+}
+
+export const fetchArchivedProducts = async ({ search, page = 1, pageSize = 7 }: {
+    search: string,
+    page?: number,
+    pageSize?: number
+}) => {
+    const skip = (page - 1) * pageSize;
+
+    const baseWhere = {
+        isArchived: true,
+        OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { brand: { name: { contains: search, mode: "insensitive" as const } } }
+        ],
+    };
+
+    const [products, totalCount] = await Promise.all([
+        prisma.product.findMany({
+            where: baseWhere,
+            include: { brand: true, variants: true, images: true, categories: true },
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: pageSize
+        }),
+        prisma.product.count({ where: baseWhere })
+    ]);
+
+    return { products, totalCount };
 }
 

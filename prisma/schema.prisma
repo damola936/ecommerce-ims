@@ -17,6 +17,8 @@ model Product {
   status          ProductStatus    @default(DRAFT)
   brandId         String?
   metaTitle       String?
+  archiveId       String?
+  isArchived      Boolean          @default(false)
   metaDescription String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -25,6 +27,7 @@ model Product {
   images          ProductImage[]
   variants        ProductVariant[]
   categories      Category[]       @relation("CategoryToProduct")
+  archive         Archive?         @relation(fields: [archiveId], references: [id])
 
   @@index([status])
 }
@@ -100,6 +103,12 @@ model Report {
   coverImg  String
   content   String
   createdAt DateTime @default(now())
+}
+
+model Archive {
+  id        String    @id @default(cuid())
+  products  Product[]
+  createdAt DateTime  @default(now())
 }
 
 enum ProductStatus {
