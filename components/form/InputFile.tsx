@@ -1,11 +1,11 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export function InputFile({multiple, label = "Picture(s)"}: {multiple?: boolean, label?: string}) {
+export function InputFile({ multiple = true, label = "Picture(s)", name = "images" }: { multiple?: boolean, label?: string, name?: string }) {
     return (
         <>
-            { multiple? <Label htmlFor="picture">{label}</Label>: <Label htmlFor="picture">{label}</Label>}
-            <Input id="picture" type="file" multiple={multiple} accept="image/*" name={"images"} />
+            <Label htmlFor={name}>{label}</Label>
+            <Input id={name} type="file" multiple={multiple} accept="image/*" name={name} />
         </>
     )
 }

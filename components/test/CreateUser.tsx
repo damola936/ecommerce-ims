@@ -1,4 +1,4 @@
-import {faker} from "@faker-js/faker";
+import { faker } from "@faker-js/faker";
 import {
     Dialog, DialogClose,
     DialogContent,
@@ -7,13 +7,15 @@ import {
     DialogTitle,
     DialogTrigger
 } from "@/components/ui/dialog";
-import {Card, CardContent} from "@/components/ui/card";
-import {Plus} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus } from "lucide-react";
 import FormContainer from "@/components/form/FormContainer";
 import FormInput from "@/components/form/FormInput";
-import {Button} from "@/components/ui/button";
-import {SubmitButton} from "@/components/form/buttons";
-import {createUserAction} from "@/utils/actions";
+import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/form/buttons";
+import { createUserAction } from "@/utils/actions";
+
+import { InputFile } from "@/components/form/InputFile";
 
 function CreateUserComponent() {
     const email = faker.internet.email()
@@ -40,9 +42,12 @@ function CreateUserComponent() {
                             Create a new User for test purposes
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-4">
+                    <div className="grid gap-4 my-4">
                         <div className="grid gap-3">
-                            <FormInput name={"email"} label={"Email"} defaultValue={email} className={"w-62.5"} />
+                            <FormInput name={"email"} label={"Email"} defaultValue={email} />
+                        </div>
+                        <div className="grid gap-3">
+                            <InputFile name={"profileImage"} label={"Profile Image"} multiple={false} />
                         </div>
                     </div>
                     <DialogFooter>

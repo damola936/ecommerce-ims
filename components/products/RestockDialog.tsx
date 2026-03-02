@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react';
 import { SubmitButton } from "@/components/form/buttons";
 import {
@@ -20,6 +22,7 @@ import {CorrectedProductVariant} from "@/components/products/EditProductDialog";
 
 
 function RestockDialog({ name, id, variants }: { name: string, id: string, variants: CorrectedProductVariant[] }) {
+    const [variantId, setVariantId] = React.useState<string>("")
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -40,7 +43,7 @@ function RestockDialog({ name, id, variants }: { name: string, id: string, varia
                         <input type="hidden" name={"id"} value={id} />
                         <div className={"grid gap-3"}>
                             <Label>Variant</Label>
-                            <Select name={"variantId"}>
+                            <Select name={"variants"} onValueChange={(value) => setVariantId(value)}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select Variant" />
                                 </SelectTrigger>
@@ -48,7 +51,7 @@ function RestockDialog({ name, id, variants }: { name: string, id: string, varia
                                     <SelectGroup>
                                         <SelectLabel>Variants</SelectLabel>
                                         {variants.map((variant) => (
-                                            <SelectItem key={variant.id} value={variant.attributes?.color}>
+                                            <SelectItem key={variant.id} value={variant.id}>
                                                 {variant.attributes?.color}
                                             </SelectItem>
                                         ))}
@@ -57,6 +60,7 @@ function RestockDialog({ name, id, variants }: { name: string, id: string, varia
                             </Select>
                         </div>
                     </div>
+                    <input type={"hidden"} name={"variantId"} value={variantId}/>
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline">Cancel</Button>

@@ -2,7 +2,14 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation"
-import { ProductSchema, ReportSchema, ImageSchema, validateWithZodSchema, EditedProductSchema } from "@/utils/schemas";
+import {
+    ProductSchema,
+    ReportSchema,
+    ImageSchema,
+    validateWithZodSchema,
+    EditedProductSchema,
+    UserSchema
+} from "@/utils/schemas";
 import { uploadImagesToBucket, uploadImageToBucket, deleteImageFromBucket } from "@/utils/supabase-image-upload-delete";
 import { prisma } from "@/lib/prisma";
 import slugify from "slugify";
@@ -249,19 +256,31 @@ export async function createBrandAction(prevState: any, formData: FormData) {
 
 export async function createUserAction(prevState: any, formData: FormData) {
     try {
-        const email = (formData.get("email") as string)?.trim();
-        if (!email) {
-            return { message: "Email is required." }
-        }
+        const rawData = Object.fromEntries(formData);
+        const profileImage = formData.get("profileImage") as File;
+
+        const validatedFields = validateWithZodSchema(UserSchema, {
+            ...rawData,
+            profileImage: profileImage.size > 0 ? profileImage : undefined,
+        });
+
+        const { email, profileImage: validatedImage } = validatedFields;
+
         const existingUser = await prisma.user.findFirst({
             where: {
                 email: email
             }
         })
         if (!existingUser) {
+            let imageUrl = null;
+            if (validatedImage) {
+                imageUrl = await uploadImageToBucket(validatedImage);
+            }
+
             await prisma.user.create({
                 data: {
                     email: email,
+                    profileImage: imageUrl,
                 }
             })
             revalidatePath("/ecommerce/test/create")
@@ -534,6 +553,7 @@ export const updateOrderStatusAction = async (prevState: any, formData: FormData
         data: { status }
     })
     revalidatePath("/ecommerce/dashboard/overview")
+    revalidatePath("/ecommerce/orders/all")
     return { message: "Order status updated successfully." }
 }
 
@@ -753,5 +773,40 @@ export const fetchArchivedProducts = async ({ search, page = 1, pageSize = 7 }: 
     ]);
 
     return { products, totalCount };
+}
+
+export const getAllCustomers = async () => {
+    const users = await prisma.user.findMany({
+        include: {
+            _count: { select: { orders: true } },
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    })
+    return users
+}
+
+export const getCustomerById = async (id: string) => {
+    const customer = await prisma.user.findUnique({
+        where: { id },
+        include: {
+            orders: {
+                include: {
+                    items: {
+                        include: {
+                            product: {
+                                include: { categories: true, images: true }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: "desc"
+                }
+            }
+        }
+    })
+    return customer
 }
 

@@ -105,6 +105,11 @@ export const ReportSchema = z.object({
     content: z.string().min(100, { message: "Content cannot be less that 100 letters" }),
 })
 
+export const UserSchema = z.object({
+    email: z.email({ message: "Invalid email address" }),
+    profileImage: validateImageFile().optional(),
+})
+
 export function validateWithZodSchema<T>(schema: ZodSchema<T>, data: unknown): T {
     const result = schema.safeParse(data)
     if (!result.success) {

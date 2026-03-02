@@ -69,9 +69,11 @@ model ProductImage {
 }
 
 model User {
-  id     String  @id @default(cuid())
-  email  String  @unique
-  orders Order[]
+  id           String   @id @default(cuid())
+  email        String   @unique
+  profileImage String?
+  createdAt    DateTime @default(now())
+  orders       Order[]
 }
 
 model Order {

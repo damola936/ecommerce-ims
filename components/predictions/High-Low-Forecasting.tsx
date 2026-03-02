@@ -8,7 +8,6 @@ import React, {useState} from "react";
 import {HiLoOrder} from "@/utils/actions";
 import {categoryModel} from "@/utils/categorical";
 import {Button} from "@/components/ui/button";
-import {visitorsChartData} from "@/utils/area-chart-data";
 import { useRouter } from "next/navigation";
 import AIEnginePulseComponent from "@/components/predictions/AIEnginePulseComponent";
 

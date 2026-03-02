@@ -8,8 +8,8 @@ import {
   GalleryVerticalEnd,
   LucideLock,
   SquareTerminal,
-    LucideWrench,
-    Archive
+  LucideWrench,
+  Archive
 } from "lucide-react"
 
 import { NavMain } from "@/components/sidebar/nav-main"
@@ -79,14 +79,6 @@ const data = {
           title: "All Orders",
           url: "/ecommerce/orders/all",
         },
-        {
-          title: "Completed",
-          url: "/ecommerce/orders/completed",
-        },
-        {
-          title: "Pending",
-          url: "/ecommerce/orders/pending",
-        },
       ],
     },
     {
@@ -97,10 +89,6 @@ const data = {
         {
           title: "All Customers",
           url: "/ecommerce/customers/all",
-        },
-        {
-          title: "Recent Customers",
-          url: "/ecommerce/customers/recent",
         },
       ],
     },
