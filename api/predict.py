@@ -1,51 +1,37 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
-import numpy as np
-from datetime import datetime
+import pandas as pd
+import joblib
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse, parse_qs
 
 def predict_traffic(date_string, model_data):
     model = model_data['model']
     scaler = model_data['scaler']
     feature_columns = model_data['features']
 
-    # 1. Parse date
-    dt = datetime.strptime(date_string, "%Y-%m-%d")
+    # 1. Create a single-row dataframe for the date
+    input_df = pd.DataFrame({'date': [pd.to_datetime(date_string)]})
     
-    # 2. Extract features manually (matching the previous pandas logic)
-    month = dt.month
-    day = dt.day
-    year = dt.year
-    day_of_week = dt.weekday() # Monday is 0, Sunday is 6
-    is_weekend = 1 if day_of_week in [5, 6] else 0
-    quarter = (month - 1) // 3 + 1
+    # 2. Apply preprocessing
+    df = input_df.copy()
+    df["month_name"] = df["date"].dt.month_name()
+    df["day_name"] = df["date"].dt.day_name()
+    df["month"] = df["date"].dt.month
+    df["day"] = df["date"].dt.day
+    df["year"] = df["date"].dt.year
+    df["day_of_week"] = df["date"].dt.dayofweek
+    df["is_weekend"] = df["date"].dt.dayofweek.isin([5, 6]).astype(int)
+    df["quarter"] = df["date"].dt.quarter
+    df = df.drop(["date"], axis=1)
     
-    month_name = dt.strftime("%B")
-    day_name = dt.strftime("%A")
-
-    # 3. Create initial feature dictionary
-    features = {
-        "month": month,
-        "day": day,
-        "year": year,
-        "day_of_week": day_of_week,
-        "is_weekend": is_weekend,
-        "quarter": quarter,
-        f"month_name_{month_name}": 1,
-        f"day_name_{day_name}": 1
-    }
+    # 3. Align Columns
+    df_encoded = pd.get_dummies(df)
+    df_final = df_encoded.reindex(columns=feature_columns, fill_value=0)
     
-    # 4. Align with expected feature columns (One-Hot Encoding)
-    # We create a numpy array of zeros with the length of feature_columns
-    input_vector = np.zeros(len(feature_columns))
-    
-    for i, col in enumerate(feature_columns):
-        if col in features:
-            input_vector[i] = features[col]
-            
-    # 5. Scale and Predict
-    input_vector = input_vector.reshape(1, -1)
-    df_scaled = scaler.transform(input_vector)
+    # 4. Scale and Predict
+    df_scaled = scaler.transform(df_final)
     prediction = model.predict(df_scaled)
     
     return max(0, int(prediction[0]))
