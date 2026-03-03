@@ -725,6 +725,56 @@ export const fetchAllProductCategories = async () => {
     return categories
 }
 
+export const fetchCategoriesWithHierarchy = async () => {
+    const categories = await prisma.category.findMany({
+        where: { parentId: null },
+        include: {
+            children: {
+                include: {
+                    _count: { select: { products: true } }
+                }
+            },
+            _count: { select: { products: true } }
+        },
+        orderBy: { name: "asc" }
+    })
+    return categories
+}
+
+export const fetchProductsByCategory = async ({ categoryName, page = 1, pageSize = 8 }: {
+    categoryName?: string,
+    page?: number,
+    pageSize?: number
+}) => {
+    const skip = (page - 1) * pageSize;
+
+    const whereClause = categoryName
+        ? {
+            categories: {
+                some: {
+                    OR: [
+                        { name: { equals: categoryName, mode: "insensitive" as const } },
+                        { parent: { name: { equals: categoryName, mode: "insensitive" as const } } }
+                    ]
+                }
+            }
+        }
+        : {};
+
+    const [products, totalCount] = await Promise.all([
+        prisma.product.findMany({
+            where: whereClause,
+            include: { brand: true, variants: true, images: true, categories: true },
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: pageSize
+        }),
+        prisma.product.count({ where: whereClause })
+    ]);
+
+    return { products, totalCount };
+}
+
 export const createArchiveAction = async (prevState: any, formData: FormData) => {
     const productId = formData.get("id") as string;
     await prisma.product.update({
